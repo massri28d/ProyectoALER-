@@ -1,0 +1,43 @@
+# Dependencias
+node_modules/
+
+# Builds
+www/
+dist/
+build/
+
+# Capacitor / Nativo
+android/.gradle/
+android/.idea/
+android/app/build/
+android/build/
+ios/Pods/
+ios/build/
+ios/App/build/
+**/*.xcworkspace
+**/xcuserdata/
+**/*.xcuserstate
+
+# Config sensibles (si existieran)
+.env
+.env.*
+google-services.json
+GoogleService-Info.plist
+
+# SO / Editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Angular / tests / cache
+.angular/cache/
+coverage/
+.eslintcache
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+
+# Android (credenciales locales de SDK)
+android/local.properties
