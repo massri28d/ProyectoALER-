@@ -1,27 +1,72 @@
-
 import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-import { IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterOutlet, IonRouterLink } from '@ionic/angular/standalone';
+import {
+  RouterLink,RouterLinkActive
+} from '@angular/router';
+import {
+  IonApp,IonSplitPane,IonMenu,IonContent,IonList,IonListHeader,IonNote,IonMenuToggle,IonItem,IonIcon,IonLabel,IonRouterOutlet,IonRouterLink
+} from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, heartOutline, heartSharp, archiveOutline, archiveSharp, trashOutline, trashSharp, warningOutline, warningSharp, bookmarkOutline, bookmarkSharp } from 'ionicons/icons';
+
+import {
+  restaurantOutline, restaurantSharp,settingsOutline, settingsSharp,peopleOutline, peopleSharp,logInOutline, logInSharp,personCircleOutline, personCircleSharp,bookmarkOutline, bookmarkSharp
+} from 'ionicons/icons';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
-  imports: [RouterLink, RouterLinkActive, IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterLink, IonRouterOutlet],
+  standalone: true,
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    IonApp,
+    IonSplitPane,
+    IonMenu,
+    IonContent,
+    IonList,
+    IonListHeader,
+    IonNote,
+    IonMenuToggle,
+    IonItem,
+    IonIcon,
+    IonLabel,
+    IonRouterLink,
+    IonRouterOutlet
+  ]
 })
 export class AppComponent {
   public appPages = [
-    { title: 'Inbox', url: '/folder/inbox', icon: 'mail' },
-    { title: 'Outbox', url: '/folder/outbox', icon: 'paper-plane' },
-    { title: 'Favorites', url: '/folder/favorites', icon: 'heart' },
-    { title: 'Archived', url: '/folder/archived', icon: 'archive' },
-    { title: 'Trash', url: '/folder/trash', icon: 'trash' },
-    { title: 'Spam', url: '/folder/spam', icon: 'warning' },
-  ];
+    { title: 'Detectar ingredientes', url: '/folder/inbox' },
+    { title: 'Configuraciones', url: '/folder/outbox' },
+    { title: '¿ Quienes somos ?', url: '/folder/favorites' },
+    { title: 'Inicio de sesion', url: '/folder/archived' },
+  ].map(page => ({
+    ...page,
+    icon: this.getIconForTitle(page.title)
+  }));
+
   public labels = ['Family', 'Friends', 'Notes', 'Work', 'Travel', 'Reminders'];
+
   constructor() {
-    addIcons({ mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, heartOutline, heartSharp, archiveOutline, archiveSharp, trashOutline, trashSharp, warningOutline, warningSharp, bookmarkOutline, bookmarkSharp });
+    addIcons({
+      restaurantOutline, restaurantSharp,
+      settingsOutline, settingsSharp,
+      peopleOutline, peopleSharp,
+      logInOutline, logInSharp,
+      personCircleOutline, personCircleSharp,
+      bookmarkOutline, bookmarkSharp
+    });
+  }
+
+  getIconForTitle(title: string): string {
+    const lowerTitle = title.toLowerCase();
+
+    if (lowerTitle.includes('ingrediente')) return 'restaurant';
+    if (lowerTitle.includes('config')) return 'settings';
+    if (lowerTitle.includes('quienes') || lowerTitle.includes('somos')) return 'people';
+    if (lowerTitle.includes('inicio')) return 'log-in';
+    if (lowerTitle.includes('sesion')) return 'person-circle';
+
+    return 'bookmark'; // fallback icon
   }
 }
