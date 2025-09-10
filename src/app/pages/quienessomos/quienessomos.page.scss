@@ -1,0 +1,27 @@
+:host {
+  --background: #F0FDFA;
+  --color: #ffffff;
+
+  ion-content {
+    --background: #F0FDFA;  // Fondo de la página
+    color: white;           // Color del texto
+  }
+}
+
+  .contenido {
+    padding: 1.5rem;
+    text-align: left;
+
+    h2 {
+      margin-top: 1.5rem;
+      font-size: 1.4rem;
+      color: #0F172A; // también se puede definir aquí para asegurar contraste
+    }
+
+    p {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      // el color ya lo hereda del contenedor, pero puedes repetirlo por claridad
+      color: #0F172A;
+    }
+  }

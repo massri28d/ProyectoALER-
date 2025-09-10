@@ -1,0 +1,9 @@
+:host {
+  --background: #F0FDFA;
+  --color: #ffffff;
+
+  ion-content {
+    --background: #F0FDFA;  // Fondo de la página
+    color: white;           // Color del texto
+  }
+}

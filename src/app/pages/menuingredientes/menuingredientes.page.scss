@@ -1,0 +1,42 @@
+ion-menu-button {
+  color: var(--ion-color-primary);
+}
+
+:host {
+  --background: #F0FDFA;
+  --color: #ffffff;
+
+  ion-content {
+    --background: #F0FDFA;  // Fondo de la página
+    color: white;           // Color del texto
+  }
+}
+
+#container {
+  text-align: center;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #F0FDFA;
+  color: #0F172A;
+}
+
+#container strong {
+  font-size: 20px;
+  line-height: 26px;
+  color: #0F172A;
+}
+
+#container p {
+  font-size: 16px;
+  line-height: 22px;
+  color: #8c8c8c;
+  margin: 0;
+}
+
+#container a {
+  text-decoration: none;
+  color: #0F172A;
+}
