@@ -31,4 +31,8 @@ export const routes: Routes = [
     path: 'inicio-de-sesion',
     loadComponent: () => import('./pages/inicio-de-sesion/inicio-de-sesion.page').then( m => m.InicioDeSesionPage)
   },
+  {
+    path: 'camara',
+    loadComponent: () => import('./pages/camara/camara.page').then( m => m.CamaraPage)
+  },
 ];
