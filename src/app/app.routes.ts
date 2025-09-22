@@ -1,16 +1,24 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-{
-  path: '',
-  redirectTo: 'inicio',
-  pathMatch: 'full'
-},
-{
-  path: 'inicio',
-  loadComponent: () =>
-    import('./pages/inicio/inicio.page').then((m) => m.InicioPage),
-},
+  {
+    path: '',
+    redirectTo: 'login',
+    pathMatch: 'full'
+  },
+  {
+    path: 'login',
+    loadChildren: () => import('./pages/login/login.module').then(m => m.LoginPageModule)
+  },
+  {
+    path: 'registro',
+    loadChildren: () => import('./pages/registro/registro.module').then(m => m.RegistroPageModule)
+  },
+  {
+    path: 'inicio',
+    loadComponent: () =>
+      import('./pages/inicio/inicio.page').then((m) => m.InicioPage),
+  },
   {
     path: 'menuingredientes',
     loadComponent: () => import('./pages/menuingredientes/menuingredientes.page').then( m => m.MenuingredientesPage)

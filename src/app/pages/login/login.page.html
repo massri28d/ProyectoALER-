@@ -1,0 +1,17 @@
+<ion-content class="ion-padding login-bg">
+  <div class="login-container">
+    <h1 class="login-title">Iniciar Sesión</h1>
+    <form>
+      <ion-item class="login-item">
+        <ion-label position="floating">Correo electrónico</ion-label>
+        <ion-input type="email" [(ngModel)]="email" name="email" required></ion-input>
+      </ion-item>
+      <ion-item class="login-item">
+        <ion-label position="floating">Contraseña</ion-label>
+        <ion-input type="password" [(ngModel)]="password" name="password" required></ion-input>
+      </ion-item>
+      <ion-button expand="block" color="primary" (click)="login()">Iniciar sesión</ion-button>
+      <ion-button expand="block" fill="clear" color="secondary" (click)="goToRegister()">Registrarse</ion-button>
+    </form>
+  </div>
+</ion-content>
