@@ -1,33 +1,40 @@
-<ion-app>
-  <ion-split-pane contentId="main-content">
+<ion-app class="bg-slate-50">
+  <!-- En móviles el menú es overlay; en pantallas ≥992px queda fijo -->
+  <ion-split-pane contentId="main-content" when="(min-width: 992px)">
     <ion-menu contentId="main-content" type="overlay">
-      <ion-content>
-        <ion-list id="inbox-list">
-          <ion-list-header>Inbox</ion-list-header>
-          <ion-note>hi&#64;ionicframework.com</ion-note>
+      <ion-header>
+        <ion-toolbar class="aler-toolbar">
+          <ion-title class="font-semibold tracking-wide">ALER</ion-title>
+        </ion-toolbar>
+      </ion-header>
 
-          @for (p of appPages; track p; let i = $index) {
+      <ion-content class="ion-padding bg-slate-50">
+        <ion-list class="bg-transparent">
+          @for (p of appPages; track p) {
             <ion-menu-toggle auto-hide="false">
-              <ion-item routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false" routerLinkActive="selected">
-                <ion-icon aria-hidden="true" slot="start" [ios]="p.icon + '-outline'" [md]="p.icon + '-sharp'"></ion-icon>
-                <ion-label>{{ p.title }}</ion-label>
+              <ion-item
+                button
+                [routerLink]="[p.url]"
+                routerDirection="root"
+                routerLinkActive="selected"
+                lines="none"
+                detail="false"
+                class="menu-item my-2"
+              >
+                <ion-icon
+                  aria-hidden="true"
+                  slot="start"
+                  [ios]="p.icon + '-outline'"
+                  [md]="p.icon + '-sharp'">
+                </ion-icon>
+                <ion-label class="text-slate-800">{{ p.title }}</ion-label>
               </ion-item>
             </ion-menu-toggle>
           }
         </ion-list>
-
-        <ion-list id="labels-list">
-          <ion-list-header>Labels</ion-list-header>
-
-          @for (label of labels; track label) {
-            <ion-item lines="none">
-              <ion-icon aria-hidden="true" slot="start" ios="bookmark-outline" md="bookmark-sharp"></ion-icon>
-              <ion-label>{{ label }}</ion-label>
-            </ion-item>
-          }
-        </ion-list>
       </ion-content>
     </ion-menu>
+
     <ion-router-outlet id="main-content"></ion-router-outlet>
   </ion-split-pane>
 </ion-app>

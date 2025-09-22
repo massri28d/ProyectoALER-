@@ -1,119 +1,142 @@
-ion-menu ion-content {
-  --background: var(--ion-item-background, var(--ion-background-color, #fff));
+/* ================================
+   PALETA (usa la de tu logo)
+   ================================ */
+:host {
+  /* Turquesa (si no está definido en variables.scss tomará este) */
+  --aler-primary: var(--ion-color-primary, #06b6d4);
+  /* Amarillo de acento */
+  --aler-accent: #fbbf24;
 }
 
+/* Fondo del menú */
+ion-menu ion-content {
+  --background: var(--ion-item-background, var(--ion-background-color, #f8fafc)); /* slate-50 */
+}
+
+/* Header del menú */
+ion-menu ion-toolbar {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb; /* slate-200 */
+}
+ion-menu ion-title {
+  color: #0f172a; /* slate-900 */
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+
+/* ====== Espaciados por plataforma ====== */
 ion-menu.md ion-content {
-  --padding-start: 8px;
-  --padding-end: 8px;
+  --padding-start: 12px;
+  --padding-end: 12px;
   --padding-top: 20px;
   --padding-bottom: 20px;
 }
-
-ion-menu.md ion-list {
-  padding: 20px 0;
-}
-
-ion-menu.md ion-note {
-  margin-bottom: 30px;
-}
-
-ion-menu.md ion-list-header,
-ion-menu.md ion-note {
-  padding-left: 10px;
-}
-
-ion-menu.md ion-list#inbox-list {
-  border-bottom: 1px solid var(--ion-background-color-step-150, #d7d8da);
-}
-
-ion-menu.md ion-list#inbox-list ion-list-header {
-  font-size: 22px;
-  font-weight: 600;
-
-  min-height: 20px;
-}
-
-ion-menu.md ion-list#labels-list ion-list-header {
-  font-size: 16px;
-
-  margin-bottom: 18px;
-
-  color: #757575;
-
-  min-height: 26px;
-}
-
-ion-menu.md ion-item {
-  --padding-start: 10px;
-  --padding-end: 10px;
-  border-radius: 4px;
-}
-
-ion-menu.md ion-item.selected {
-  --background: rgba(var(--ion-color-primary-rgb), 0.14);
-}
-
-ion-menu.md ion-item.selected ion-icon {
-  color: var(--ion-color-primary);
-}
-
-ion-menu.md ion-item ion-icon {
-  color: #616e7e;
-}
-
-ion-menu.md ion-item ion-label {
-  font-weight: 500;
-}
-
 ion-menu.ios ion-content {
   --padding-bottom: 20px;
 }
-
 ion-menu.ios ion-list {
   padding: 20px 0 0 0;
 }
 
-ion-menu.ios ion-note {
-  line-height: 24px;
-  margin-bottom: 20px;
+/* ================================
+   ÍTEMS DEL MENÚ (estilo tarjeta)
+   Aplica si les pones class="menu-item"
+   ================================ */
+.menu-item {
+  --background: #ffffff;
+  --padding-start: 12px;
+  --inner-padding-end: 12px;
+  --min-height: 52px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;          /* slate-200 */
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  margin: .35rem 0;
+}
+.menu-item ion-label {
+  font-weight: 500;
+  color: #1f2937; /* slate-800 */
+}
+.menu-item ion-icon {
+  color: var(--aler-primary);
 }
 
+/* Hover y seleccionado */
+.menu-item:hover {
+  box-shadow: 0 6px 16px rgba(0,0,0,.06);
+  border-color: #d1d5db;              /* slate-300 */
+}
+.menu-item.selected {
+  --background: rgba(var(--ion-color-primary-rgb, 6,182,212), 0.14);
+  border-left: 4px solid var(--aler-primary);
+}
+.menu-item.selected ion-icon,
+.menu-item.selected {
+  --color: var(--aler-primary);
+}
+
+/* ================================
+   ESTILO BASE (si NO usas class="menu-item")
+   para cubrir el caso general de ion-item
+   ================================ */
+ion-menu.md ion-item,
 ion-menu.ios ion-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --min-height: 50px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  border-radius: 12px;
 }
-
-ion-menu.ios ion-item.selected ion-icon {
-  color: var(--ion-color-primary);
+ion-menu.md ion-item.selected,
+ion-menu.ios ion-item.selected {
+  --background: rgba(var(--ion-color-primary-rgb, 6,182,212), 0.14);
 }
-
+ion-menu.md ion-item ion-icon,
 ion-menu.ios ion-item ion-icon {
-  font-size: 24px;
-  color: #73849a;
+  color: #64748b; /* slate-500 */
+}
+ion-menu.md ion-item.selected ion-icon,
+ion-menu.ios ion-item.selected ion-icon {
+  color: var(--aler-primary);
 }
 
-ion-menu.ios ion-list#labels-list ion-list-header {
-  margin-bottom: 8px;
+/* Etiquetas/badges opcionales con acento amarillo */
+.badge-aler {
+  background: rgba(251,191,36,.18);
+  color: #92400e;
+  border: 1px solid var(--aler-accent);
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
 }
 
-ion-menu.ios ion-list-header,
-ion-menu.ios ion-note {
-  padding-left: 16px;
-  padding-right: 16px;
-}
-
-ion-menu.ios ion-note {
-  margin-bottom: 8px;
-}
-
+/* Notas/list headers si los usas */
 ion-note {
   display: inline-block;
   font-size: 16px;
-
   color: var(--ion-color-medium-shade);
 }
+/* Toolbar con degradado turquesa y subrayado amarillo */
+ion-menu .aler-toolbar {
+  --background: linear-gradient(90deg, #06b6d4 0%, #0891b2 100%);
+  --color: #ffffff;                 /* texto e iconos */
+  border-bottom: 3px solid #fbbf24; /* acento amarillo */
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+}
+/* Fondo del toolbar (turquesa con acento amarillo) */
+ion-menu .aler-toolbar {
+  --background: linear-gradient(90deg, #06b6d4 0%, #0891b2 100%);
+  --color: #ffffff;
+  border-bottom: 3px solid #fbbf24; /* acento amarillo */
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+}
 
-ion-item.selected {
-  --color: var(--ion-color-primary);
+/* Que el logo nunca se deforme ni se vea borroso */
+.logo-aler {
+  display: block;
+  height: 28px;    /* controla por ALTURA */
+  width: auto;     /* mantiene proporción */
+  -webkit-user-drag: none;
+  image-rendering: -webkit-optimize-contrast; /* mejora nitidez en Windows */
+}
+
+@media (min-width: 992px) {
+  .logo-aler { height: 32px; }
 }
