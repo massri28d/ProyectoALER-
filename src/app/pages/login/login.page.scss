@@ -1,18 +1,20 @@
 .login-bg {
-  --background: var(--ion-color-light);
+  --background: linear-gradient(to bottom, #F0FDFA, #F0FDFA);;
 }
 .login-container {
   max-width: 350px;
   margin: 60px auto;
   padding: 32px 24px;
-  background: var(--ion-color-step-50, #fff);
+  background: var(--ion-color-step-50, #ffffff);
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 24px #27AE60;
+  border-color:#27AE60;
 }
 .login-title {
   color: var(--ion-color-primary);
   text-align: center;
   margin-bottom: 24px;
+  color: #27AE60;
 }
 .login-item {
   --highlight-background: var(--ion-color-primary);
@@ -20,4 +22,34 @@
 }
 ion-button {
   margin-top: 12px;
+  background-color: #ffffff;
+}
+
+/////animacion del logo 
+.welcome-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0rem;
+
+    .logo {
+      width: 100px;
+      height: auto;
+      margin-bottom: 0rem;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+  }
+
+
+// Animación de entrada
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

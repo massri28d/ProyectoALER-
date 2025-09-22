@@ -1,5 +1,5 @@
 .registro-bg {
-  --background: var(--ion-color-light);
+    --background: linear-gradient(to bottom, #F0FDFA, #F0FDFA);;
 }
 .registro-container {
   max-width: 370px;
@@ -7,7 +7,8 @@
   padding: 32px 24px;
   background: var(--ion-color-step-50, #fff);
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 24px #27AE60;
+  border-color:#27AE60;
 }
 .registro-title {
   color: var(--ion-color-primary);

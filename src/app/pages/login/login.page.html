@@ -1,5 +1,14 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Inicio de sesion</ion-title>
+  </ion-toolbar>
+</ion-header>
+
 <ion-content class="ion-padding login-bg">
   <div class="login-container">
+    <div class="welcome-container">
+  <img src="assets/icon/LogoALER-DJJ.png" alt="Detección de Ingredientes" class="logo" />
+    </div>
     <h1 class="login-title">Iniciar Sesión</h1>
     <form>
       <ion-item class="login-item">
@@ -10,8 +19,8 @@
         <ion-label position="floating">Contraseña</ion-label>
         <ion-input type="password" [(ngModel)]="password" name="password" required></ion-input>
       </ion-item>
-      <ion-button expand="block" color="primary" (click)="login()">Iniciar sesión</ion-button>
-      <ion-button expand="block" fill="clear" color="secondary" (click)="goToRegister()">Registrarse</ion-button>
+      <ion-button expand="block" color="primary" (click)="login()">inicio de sesion</ion-button>
+      <ion-button expand="block" fill="clear" color="primary" (click)="goToRegister()">Registrarse</ion-button>
     </form>
   </div>
 </ion-content>

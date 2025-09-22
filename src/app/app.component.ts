@@ -59,7 +59,7 @@ export class AppComponent {
     { title: 'Detectar ingredientes', url: '/menuingredientes' },
     { title: 'Configuraciones', url: '/configuraciones' },
     { title: '¿ Quienes somos ?', url: '/quienessomos' },
-    { title: 'Inicio de sesion', url: '/inicio-de-sesion' },
+    { title: 'Inicio de sesion', url: '/login' },
   ].map(page => ({
     ...page,
     icon: this.getIconForTitle(page.title)
