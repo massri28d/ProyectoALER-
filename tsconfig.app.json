@@ -2,14 +2,13 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "./out-tsc/app",
-    "types": []
+    "types": ["node"],
+    "lib": ["ES2022", "DOM"],
+    "skipLibCheck": true,
+    "outDir": "./out-tsc/app"
   },
-  "files": [
-    "src/main.ts",
-    "src/polyfills.ts"
-  ],
-  "include": [
-    "src/**/*.d.ts"
-  ]
+  "files": [],
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/test.ts"]
 }
+

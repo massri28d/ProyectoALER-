@@ -1,5 +1,5 @@
 .Camara-content {
-  --background: linear-gradient(to bottom, #F0FDFA, #F0FDFA); // fondo degradado suave
+  --background: linear-gradient(to bottom, #F0FDFA, #F0FDFA);
 
   .welcome-container {
     display: flex;
@@ -8,48 +8,89 @@
     text-align: center;
     padding: 2rem;
 
-    .logo {
-      width: 120px;
-      height: auto;
-      margin-bottom: 1rem;
-      animation: fadeIn 1.5s ease-in-out;
-    }
-
-    h1 {
-      font-size: 2.2rem;
-      margin: 1rem 0 0.5rem;
-      color: #0F172A;
-    }
-
-    p {
-      font-size: 1.1rem;
-      color: #334155;
-      margin-bottom: 2rem;
-      max-width: 400px;
-    }
-
     ion-button {
       margin-top: 1rem;
       width: 100%;
       max-width: 300px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       transition: transform 0.2s ease;
     }
-
-    ion-button:hover {
-      transform: scale(1.03);
-    }
+    ion-button:hover { transform: scale(1.03); }
   }
 }
 
-// Animación de entrada
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Cámara */
+.camera-area { position: relative; padding: 12px; }
+video.preview {
+  width: 100%;
+  max-height: 60vh;
+  background: #000;
+  border-radius: 20px;
+  object-fit: cover;
+  box-shadow: 0 6px 20px rgba(0,0,0,.2);
 }
+
+/* Mensajes */
+.cam-msg { color: #666; text-align: center; padding: 8px 12px; }
+
+/* FAB capturar */
+ion-fab { bottom: 24px; }
+ion-fab-button {
+  width: 76px; height: 76px; --border-radius: 9999px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.25);
+}
+
+/* Botón centrado */
+.center-row { display: flex; justify-content: center; padding: 0 12px; }
+.centered-btn { min-width: 260px; justify-content: center; }
+
+/* Tarjetas */
+ion-card { margin: 12px; }
+ion-card-title { font-weight: 700; }
+
+/* Caja del resultado (texto OCR) */
+.ocr-box {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #0b0b0b;          /* texto negro */
+  line-height: 1.5;
+  font-size: 14px;
+  white-space: pre-wrap;    /* conserva saltos de línea */
+  word-break: break-word;   /* evita desbordes raros */
+}
+
+/* Ingredientes más ordenados */
+.ingredients-card {
+  --background: #fff;        /* fondo blanco del card */
+  border: 1px solid #e5e7eb; /* borde sutil */
+  border-radius: 12px;       /* esquinas suaves */
+}
+
+.ingredients-list ion-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  --inner-padding-top: 6px;
+  --inner-padding-bottom: 6px;
+}
+
+.ingredients-list ion-label {
+  white-space: normal;
+}
+
+.ingredients-list ion-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  --inner-padding-top: 6px;
+  --inner-padding-bottom: 6px;
+}
+.ingredients-list ion-label {
+  white-space: normal;
+}
+
+/* Chips de alérgenos */
+.chip { margin-right: 8px; margin-bottom: 8px; }
+
+/* Utilidades */
+.mt { margin-top: 12px; }
