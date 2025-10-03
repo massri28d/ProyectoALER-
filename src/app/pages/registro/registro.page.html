@@ -13,12 +13,16 @@
         <ion-input type="email" [(ngModel)]="email" name="email" required></ion-input>
       </ion-item>
       <ion-item class="registro-item">
+        <ion-label position="floating">RUT</ion-label>
+        <ion-input type="text" [(ngModel)]="rut" name="rut" required maxlength="20" pattern="[0-9kK\-]+"></ion-input>
+      </ion-item>
+      <ion-item class="registro-item">
         <ion-label position="floating">Nombre</ion-label>
         <ion-input type="text" [(ngModel)]="nombre" name="nombre" required></ion-input>
       </ion-item>
       <ion-item class="registro-item">
         <ion-label position="floating">Fecha de nacimiento</ion-label>
-        <ion-datetime display-format="DD/MM/YYYY" [(ngModel)]="fechaNacimiento" name="fechaNacimiento" required></ion-datetime>
+        <ion-datetime presentation="date" [(ngModel)]="fechaNacimiento" name="fechaNacimiento" required display-format="YYYY/MM/DD"></ion-datetime>
       </ion-item>
       <ion-item class="registro-item">
         <ion-label position="floating">Teléfono</ion-label>
@@ -36,7 +40,7 @@
         <ion-label position="floating">Contraseña</ion-label>
         <ion-input type="password" [(ngModel)]="password" name="password" required></ion-input>
       </ion-item>
-      <ion-button expand="block" color="primary" (click)="registrar()">Registrarse</ion-button>
+  <ion-button expand="block" color="primary" (click)="registrar()">Registrarse</ion-button>
       <ion-button expand="block" fill="clear" color="primary" (click)="volverLogin()">Volver al login</ion-button>
     </form>
   </div>

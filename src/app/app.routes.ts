@@ -43,4 +43,8 @@ export const routes: Routes = [
     path: 'camara',
     loadComponent: () => import('./pages/camara/camara.page').then( m => m.CamaraPage)
   },
+  {
+    path: 'usuarios',
+    loadComponent: () => import('./pages/usuarios/usuarios.page').then(m => m.UsuariosPage)
+  },
 ];
