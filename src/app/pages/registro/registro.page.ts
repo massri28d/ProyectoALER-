@@ -3,9 +3,8 @@ import { Router } from '@angular/router';
 import { IonicModule, ToastController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-
-import { DatabaseService } from 'src/app/services/database.service';// importa el servicio
-import * as bcrypt from 'bcryptjs'; // para encriptar contraseña
+import { DatabaseService } from 'src/app/services/database.service';
+import * as bcrypt from 'bcryptjs';
 
 @Component({
   selector: 'app-registro',
@@ -22,27 +21,15 @@ export class RegistroPage {
   telefono = '';
   genero = '';
   password = '';
-  dbReady = false;
+  dbReady = true; // Se asume que la DB ya está lista tras inicialización global
 
   constructor(
     private router: Router,
     private db: DatabaseService,
     private toastCtrl: ToastController
-  ) {
-    // inicializa la DB al entrar a la página (si no lo hiciste en AppComponent)
-    this.initDb();
-  }
+  ) {}
 
-  async initDb() {
-    try {
-      await this.db.initializePlugin();
-      this.dbReady = true;
-      console.log('DB inicializada desde RegistroPage');
-    } catch (err) {
-      this.dbReady = false;
-      console.error('Error inicializando DB', err);
-    }
-  }
+  // ...existing code...
 
   async registrar() {
     if (!this.dbReady) {
@@ -56,18 +43,12 @@ export class RegistroPage {
     }
     if (!/^\S+@\S+\.\S+$/.test(this.email)) {
       this.showToast('El email no es válido');
-      return;
-    }
-    if (!/^([0-9]+-[0-9kK])$/.test(this.rut)) {
-      this.showToast('El RUT no es válido. Debe ser formato 12345678-9');
-      return;
-    }
-    if (this.nombre.length < 2) {
+    // Ya no se valida el campo fechaNacimiento
       this.showToast('El nombre debe tener al menos 2 caracteres');
       return;
     }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(this.fechaNacimiento)) {
-      this.showToast('La fecha de nacimiento debe ser YYYY-MM-DD');
+    if (!/^\d{4}\/\d{2}\/\d{2}$/.test(this.fechaNacimiento)) {
+      this.showToast('La fecha de nacimiento debe ser YYYY/MM/DD');
       return;
     }
     if (!/^\d{8,15}$/.test(this.telefono)) {

@@ -86,12 +86,9 @@ export class AppComponent {
       personCircleOutline, personCircleSharp,
       bookmarkOutline, bookmarkSharp
     });
-
-    // inicializamos la base de datos al arrancar
-    this.initializeApp();
   }
 
-  async initializeApp() {
+  async ngOnInit() {
     await this.platform.ready();
     await this.dbService.initializePlugin(); // ✅ inicializa SQLite y crea tablas
   }

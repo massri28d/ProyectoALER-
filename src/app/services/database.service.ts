@@ -115,12 +115,12 @@ export class DatabaseService {
     // run(sql, values)
     const res = await this.db.run(sql, [
       user.email,
-      user.rut,
       user.nombre,
       user.fechaNacimiento,
       user.telefono,
       user.genero,
-      user.password
+      user.password,
+      user.rut
     ]);
     return res;
   }

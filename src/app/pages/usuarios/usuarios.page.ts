@@ -18,7 +18,6 @@ export class UsuariosPage implements OnInit {
 
   async ngOnInit() {
     try {
-      await this.db.initializePlugin();
       this.usuarios = await this.db.getUsers();
     } catch (err) {
       console.error('Error obteniendo usuarios', err);
