@@ -1,3 +1,5 @@
+
+
 import { Component } from '@angular/core';
 import {
   RouterLink,
@@ -16,7 +18,8 @@ import {
   IonIcon,
   IonLabel,
   IonRouterOutlet,
-  IonRouterLink
+  IonRouterLink,
+  Platform // ✅ añadimos Platform aquí
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 
@@ -29,6 +32,9 @@ import {
   personCircleOutline, personCircleSharp,
   bookmarkOutline, bookmarkSharp
 } from 'ionicons/icons';
+
+// ✅ importamos DatabaseService
+import { DatabaseService } from './services/database.service';
 
 @Component({
   selector: 'app-root',
@@ -67,7 +73,10 @@ export class AppComponent {
 
   public labels = [];
 
-  constructor() {
+  constructor(
+    private platform: Platform,
+    private dbService: DatabaseService // ✅ inyectamos servicio
+  ) {
     addIcons({
       homeOutline, homeSharp,
       restaurantOutline, restaurantSharp,
@@ -77,6 +86,11 @@ export class AppComponent {
       personCircleOutline, personCircleSharp,
       bookmarkOutline, bookmarkSharp
     });
+  }
+
+  async ngOnInit() {
+    await this.platform.ready();
+    await this.dbService.initializePlugin(); // ✅ inicializa SQLite y crea tablas
   }
 
   getIconForTitle(title: string): string {
