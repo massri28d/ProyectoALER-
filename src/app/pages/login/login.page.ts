@@ -1,15 +1,24 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-
-import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import {
+  IonContent, IonHeader, IonTitle, IonToolbar,
+  IonList, IonItem, IonLabel, IonInput,
+  IonButton, IonImg
+} from '@ionic/angular/standalone';
+
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
   standalone: true,
-  imports: [IonicModule, FormsModule, CommonModule]
+  imports: [
+    CommonModule, FormsModule,
+    IonContent, IonHeader, IonTitle, IonToolbar,
+    IonList, IonItem, IonLabel, IonInput,
+    IonButton, IonImg
+  ]
 })
 export class LoginPage {
   email = '';
@@ -18,11 +27,9 @@ export class LoginPage {
   constructor(private router: Router) {}
 
   login() {
-    // Aquí iría la lógica de autenticación
+    // aquí pondrás la validación real
     this.router.navigate(['/inicio']);
   }
 
-  goToRegister() {
-    this.router.navigate(['/registro']);
-  }
+  goToRegister() { this.router.navigate(['/registro']); }
 }

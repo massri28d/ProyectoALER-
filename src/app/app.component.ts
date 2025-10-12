@@ -1,5 +1,3 @@
-
-
 import { Component } from '@angular/core';
 import {
   RouterLink,
@@ -19,10 +17,9 @@ import {
   IonLabel,
   IonRouterOutlet,
   IonRouterLink,
-  Platform // ✅ añadimos Platform aquí
+  Platform
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-
 import {
   homeOutline, homeSharp,
   restaurantOutline, restaurantSharp,
@@ -33,8 +30,11 @@ import {
   bookmarkOutline, bookmarkSharp
 } from 'ionicons/icons';
 
-// ✅ importamos DatabaseService
+// SQLite
 import { DatabaseService } from './services/database.service';
+
+// Status bar (Capacitor)
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 @Component({
   selector: 'app-root',
@@ -71,11 +71,11 @@ export class AppComponent {
     icon: this.getIconForTitle(page.title)
   }));
 
-  public labels = [];
+  public labels: string[] = [];
 
   constructor(
     private platform: Platform,
-    private dbService: DatabaseService // ✅ inyectamos servicio
+    private dbService: DatabaseService
   ) {
     addIcons({
       homeOutline, homeSharp,
@@ -90,18 +90,27 @@ export class AppComponent {
 
   async ngOnInit() {
     await this.platform.ready();
-    await this.dbService.initializePlugin(); // ✅ inicializa SQLite y crea tablas
+
+    // 1) Evita que la status bar tape el header
+    try {
+      await StatusBar.setOverlaysWebView({ overlay: false });
+      await StatusBar.setStyle({ style: Style.Dark });            // texto claro sobre barra oscura
+      await StatusBar.setBackgroundColor({ color: '#17864B' });   // tu verde
+    } catch {
+      // en web/no soportado, simplemente ignora
+    }
+
+    // 2) Inicializa SQLite y crea tablas
+    await this.dbService.initializePlugin();
   }
 
   getIconForTitle(title: string): string {
     const lowerTitle = title.toLowerCase();
-
     if (lowerTitle.includes('inicio') && !lowerTitle.includes('sesion')) return 'home';
     if (lowerTitle.includes('ingrediente')) return 'restaurant';
     if (lowerTitle.includes('config')) return 'settings';
     if (lowerTitle.includes('quienes') || lowerTitle.includes('somos')) return 'people';
     if (lowerTitle.includes('sesion')) return 'log-in';
-
-    return 'bookmark'; // ícono por defecto
+    return 'bookmark';
   }
 }

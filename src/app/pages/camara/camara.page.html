@@ -1,10 +1,10 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="false">
   <ion-toolbar color="primary">
     <ion-title>Camara</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="Camara-content">
+<ion-content class="Camara-content">
   <ion-header collapse="condense">
     <ion-toolbar>
       <ion-title size="large">Camara</ion-title>
@@ -12,12 +12,6 @@
   </ion-header>
 
   <!-- Navegación -->
-  <!--<div class="welcome-container">
-    /*<ion-button expand="block" shape="round" color="primary" routerLink="/inicio">
-      <ion-icon name="information-circle-outline" slot="start"></ion-icon>
-      INICIO
-    </ion-button>
-  </div>-->
   <div class="welcome-container">
     <ion-button expand="block" shape="round" color="primary" routerLink="/menuingredientes">
       <ion-icon name="information-circle-outline" slot="start"></ion-icon>
@@ -25,18 +19,27 @@
     </ion-button>
   </div>
 
-  <!-- Webcam -->
+  <!-- ===== ANDROID / iOS (nativo con @capacitor/camera) ===== -->
+  <div class="center-row mt" *ngIf="isNative">
+    <ion-button expand="block" shape="round" (click)="takePhotoNative()">
+      <ion-icon name="camera" slot="start"></ion-icon>
+      TOMAR FOTO
+    </ion-button>
+  </div>
+  <div class="center-row mt" *ngIf="isNative">
+    <ion-button expand="block" shape="round" fill="outline" (click)="pickFromGalleryNative()">
+      USAR FOTO DE LA GALERÍA
+    </ion-button>
+  </div>
+
+  <!-- ===== WEB / PWA (getUserMedia) ===== -->
   <div class="camera-area" *ngIf="isWeb">
     <video #videoEl class="preview" autoplay playsinline muted></video>
     <canvas #canvasEl hidden></canvas>
 
     <!-- Selector de cámara -->
     <ion-item *ngIf="devices.length" class="mt" lines="full">
-      <ion-select
-        interface="popover"
-        [value]="selectedDeviceId"
-        (ionChange)="onChangeCamera($event)"
-        label="Cámara">
+      <ion-select interface="popover" [value]="selectedDeviceId" (ionChange)="onChangeCamera($event)" label="Cámara">
         <ion-select-option *ngFor="let d of devices" [value]="d.deviceId">
           {{ d.label || ('Cámara ' + d.deviceId.slice(0,4)) }}
         </ion-select-option>
@@ -45,7 +48,6 @@
 
     <div *ngIf="!webcamReady && errorMsg" class="cam-msg">{{ errorMsg }}</div>
 
-    <!-- Botón de captura -->
     <ion-fab vertical="bottom" horizontal="center">
       <ion-fab-button size="large" (click)="onClickBigCamera()">
         <ion-icon name="camera"></ion-icon>
@@ -53,14 +55,12 @@
     </ion-fab>
   </div>
 
-  <!-- Botón galería -->
-  <div class="center-row mt">
+  <!-- Fallback input file SOLO para web -->
+  <div class="center-row mt" *ngIf="isWeb">
     <ion-button class="centered-btn" shape="round" fill="outline" (click)="pickFromGallery()">
       USAR FOTO DE LA GALERÍA
     </ion-button>
   </div>
-
-  <!-- Input oculto -->
   <input type="file" accept="image/*" (change)="onFileChange($event)" hidden #fileInput>
 
   <!-- Cargando OCR -->
@@ -76,7 +76,7 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Resultado (antes: Texto detectado (limpio)) -->
+  <!-- Resultado -->
   <ion-card *ngIf="ocrText">
     <ion-card-header>
       <ion-card-title>Resultado</ion-card-title>

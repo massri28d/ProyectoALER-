@@ -155,5 +155,19 @@ export class DatabaseService {
       return null;
     }
   }
+
+/**
+   * Obtiene un usuario por email
+   */
+  async getUserByEmail(email: string): Promise<any | null> {
+    if (!this.db) throw new Error('DB no inicializada');
+    const res = await this.db.query(
+      'SELECT * FROM users WHERE email = ? LIMIT 1;',
+      [email]
+    );
+    return res.values && res.values.length ? res.values[0] : null;
+  }
 }
+
+
 

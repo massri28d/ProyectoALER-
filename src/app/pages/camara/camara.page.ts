@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonIcon,
   IonItem, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  /*IonTextarea, */ IonSpinner, IonImg, IonFab, IonFabButton,
+  IonSpinner, IonImg, IonFab, IonFabButton,
   IonSelect, IonSelectOption, IonList, IonLabel, IonChip
 } from '@ionic/angular/standalone';
 import { Router, RouterModule } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { OcrService } from '../../services/ocr.service';
 
 @Component({
@@ -20,7 +21,7 @@ import { OcrService } from '../../services/ocr.service';
     CommonModule, FormsModule, RouterModule,
     IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonIcon,
     IonItem, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    /*IonTextarea, */ IonSpinner, IonImg, IonFab, IonFabButton,
+    IonSpinner, IonImg, IonFab, IonFabButton,
     IonSelect, IonSelectOption, IonList, IonLabel, IonChip
   ]
 })
@@ -46,10 +47,12 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
   alergenos: string[] = [];
 
   readonly isWeb = Capacitor.getPlatform() === 'web';
+  readonly isNative = Capacitor.isNativePlatform();
 
   constructor(private ocr: OcrService, private router: Router) {}
 
   async ngAfterViewInit() {
+    // Webcam solo en PWA/web
     if (this.isWeb) await this.openWebcam();
   }
 
@@ -58,7 +61,43 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     this.ocr.terminate();
   }
 
-  // ---------- Webcam ----------
+  // ===== Nativo (Android/iOS) =====
+  private async ensurePerms() {
+    const p = await Camera.checkPermissions();
+    if (p.camera !== 'granted' || p.photos !== 'granted') {
+      const r = await Camera.requestPermissions({ permissions: ['camera', 'photos'] });
+      if (r.camera !== 'granted') throw new Error('Permiso de cámara denegado');
+    }
+  }
+
+ async takePhotoNative() {
+  await this.ensurePerms();
+  const photo = await Camera.getPhoto({
+    source: CameraSource.Camera,
+    resultType: CameraResultType.DataUrl,
+    quality: 100,
+    width: 2000,
+    correctOrientation: true,
+    saveToGallery: false,
+  });
+  this.photoDataUrl = photo.dataUrl!;
+  await this.runOcrAndParse();
+}
+
+  async pickFromGalleryNative() {
+  await this.ensurePerms();
+  const photo = await Camera.getPhoto({
+    source: CameraSource.Photos,
+    resultType: CameraResultType.DataUrl,
+    quality: 100,
+    width: 2000,
+    correctOrientation: true,
+  });
+  this.photoDataUrl = photo.dataUrl!;
+  await this.runOcrAndParse();
+}
+
+  // ===== WEB / PWA (getUserMedia) =====
   private async listCameras() {
     const all = await navigator.mediaDevices.enumerateDevices();
     this.devices = all.filter(d => d.kind === 'videoinput');
@@ -135,7 +174,7 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     await this.captureFromWebcam();
   }
 
-  // ---------- Galería ----------
+  // ===== Fallback input file (solo web) =====
   pickFromGallery() { this.fileInput?.nativeElement.click(); }
   onFileChange(ev: Event) {
     const file = (ev.target as HTMLInputElement).files?.[0];
@@ -148,7 +187,7 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     reader.readAsDataURL(file);
   }
 
-  // ---------- OCR + Parsing ----------
+  // ===== OCR + parsing =====
   private async runOcrAndParse() {
     if (!this.photoDataUrl) return;
     this.scanning = true; this.ocrDone = false;
@@ -206,10 +245,11 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
       buf += ch;
     }
     if (buf.trim()) out.push(buf.trim());
-    return out.flatMap(item =>
+
+    return out.flatMap((item: string) =>
       (item.includes(' y ') && !/[()]/.test(item))
-        ? item.split(/\s+y\s+/i).map(s => s.trim()).filter(Boolean)
-        : item
+        ? item.split(/\s+y\s+/i).map((s: string) => s.trim()).filter(Boolean)
+        : [item]
     );
   }
 

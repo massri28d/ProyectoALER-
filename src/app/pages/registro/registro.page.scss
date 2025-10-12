@@ -1,24 +1,28 @@
 .registro-bg {
-    --background: linear-gradient(to bottom, #F0FDFA, #F0FDFA);;
+  --background: linear-gradient(to bottom, #F0FDFA, #F0FDFA);
 }
+
 .registro-container {
   max-width: 370px;
   margin: 40px auto;
   padding: 32px 24px;
   background: var(--ion-color-step-50, #fff);
   border-radius: 16px;
-  box-shadow: 0 4px 24px #27AE60;
-  border-color:#27AE60;
+  box-shadow: 0 4px 24px rgba(39, 174, 96, .35);
+  border: 1px solid #27AE60;
 }
+
 .registro-title {
   color: var(--ion-color-primary);
   text-align: center;
   margin-bottom: 24px;
 }
+
 .registro-item {
   --highlight-background: var(--ion-color-primary);
   margin-bottom: 18px;
 }
+
 ion-button {
   margin-top: 12px;
 }

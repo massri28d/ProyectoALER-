@@ -1,26 +1,30 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="false">
   <ion-toolbar color="primary">
-    <ion-title>Inicio de sesion</ion-title>
+    <ion-title>Inicio de sesión</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding login-bg">
   <div class="login-container">
     <div class="welcome-container">
-  <img src="assets/icon/LogoALER-DJJ.png" alt="Detección de Ingredientes" class="logo" />
+      <img src="assets/icon/LogoALER-DJJ.png" alt="ALER" class="logo" />
     </div>
+
     <h1 class="login-title">Iniciar Sesión</h1>
-    <form>
-      <ion-item class="login-item">
+
+    <ion-list lines="full">
+      <ion-item>
         <ion-label position="floating">Correo electrónico</ion-label>
-        <ion-input type="email" [(ngModel)]="email" name="email" required></ion-input>
+        <ion-input type="email" autocomplete="email" name="email" [(ngModel)]="email"></ion-input>
       </ion-item>
-      <ion-item class="login-item">
+
+      <ion-item>
         <ion-label position="floating">Contraseña</ion-label>
-        <ion-input type="password" [(ngModel)]="password" name="password" required></ion-input>
+        <ion-input type="password" autocomplete="current-password" name="password" [(ngModel)]="password"></ion-input>
       </ion-item>
-      <ion-button expand="block" color="primary" (click)="login()">inicio de sesion</ion-button>
-      <ion-button expand="block" fill="clear" color="primary" (click)="goToRegister()">Registrarse</ion-button>
-    </form>
+    </ion-list>
+
+    <ion-button expand="block" color="primary" (click)="login()">INICIAR SESIÓN</ion-button>
+    <ion-button expand="block" fill="clear" color="primary" (click)="goToRegister()">REGISTRARSE</ion-button>
   </div>
 </ion-content>
