@@ -15,16 +15,24 @@
     <ion-list lines="full">
       <ion-item>
         <ion-label position="floating">Correo electrónico</ion-label>
-        <ion-input type="email" autocomplete="email" name="email" [(ngModel)]="email"></ion-input>
+        <ion-input type="email" autocomplete="email" name="email" [(ngModel)]="email" [disabled]="isLoading"></ion-input>
       </ion-item>
 
       <ion-item>
         <ion-label position="floating">Contraseña</ion-label>
-        <ion-input type="password" autocomplete="current-password" name="password" [(ngModel)]="password"></ion-input>
+        <ion-input type="password" autocomplete="current-password" name="password" [(ngModel)]="password" [disabled]="isLoading"></ion-input>
       </ion-item>
     </ion-list>
 
-    <ion-button expand="block" color="primary" (click)="login()">INICIAR SESIÓN</ion-button>
-    <ion-button expand="block" fill="clear" color="primary" (click)="goToRegister()">REGISTRARSE</ion-button>
+    <div *ngIf="isLoading" style="display: flex; justify-content: center; margin: 20px 0;">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+
+    <ion-button expand="block" color="primary" (click)="login()" [disabled]="isLoading">
+      {{ isLoading ? 'Cargando...' : 'INICIAR SESIÓN' }}
+    </ion-button>
+    <ion-button expand="block" fill="clear" color="primary" (click)="goToRegister()" [disabled]="isLoading">
+      REGISTRARSE
+    </ion-button>
   </div>
 </ion-content>

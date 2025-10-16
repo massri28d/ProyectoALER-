@@ -5,11 +5,9 @@ import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar,
   IonList, IonItem, IonLabel, IonInput,
-  IonSelect, IonSelectOption, IonButton, IonText
+  IonSelect, IonSelectOption, IonButton, IonSpinner, ToastController
 } from '@ionic/angular/standalone';
-import { ToastController } from '@ionic/angular';
-import { DatabaseService } from 'src/app/services/database.service';
-import * as bcrypt from 'bcryptjs';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-registro',
@@ -20,7 +18,7 @@ import * as bcrypt from 'bcryptjs';
     CommonModule, FormsModule,
     IonContent, IonHeader, IonTitle, IonToolbar,
     IonList, IonItem, IonLabel, IonInput,
-    IonSelect, IonSelectOption, IonButton, IonText
+    IonSelect, IonSelectOption, IonButton, IonSpinner
   ]
 })
 export class RegistroPage {
@@ -31,44 +29,52 @@ export class RegistroPage {
   telefono = '';
   genero = '';
   password = '';
-  dbReady = true;
+  isLoading = false;
 
   constructor(
     private router: Router,
-    private db: DatabaseService,
+    private auth: AuthService,
     private toastCtrl: ToastController
   ) {}
 
   async registrar() {
-    if (!this.dbReady) { return this.showToast('DB no lista'); }
-
     if (!this.email || !this.rut || !this.nombre || !this.telefono || !this.genero || !this.password) {
       return this.showToast('Completa todos los campos');
     }
     if (!/^\S+@\S+\.\S+$/.test(this.email)) return this.showToast('Email inválido');
-    if (!/^\d{8,15}$/.test(this.telefono)) return this.showToast('Teléfono inválido');
-    if (this.password.length < 6) return this.showToast('Mínimo 6 caracteres');
+    if (!/^\d{8,15}$/.test(this.telefono)) return this.showToast('Teléfono inválido (solo números)');
+    if (this.password.length < 6) return this.showToast('Mínimo 6 caracteres en contraseña');
+
+    this.isLoading = true;
 
     try {
-      const hashed = bcrypt.hashSync(this.password, 10);
-      await this.db.addUser({
+      const success = await this.auth.registrar({
         email: this.email,
         rut: this.rut,
         nombre: this.nombre,
-        fechaNacimiento: this.fechaNacimiento, // opcional
+        fechaNacimiento: this.fechaNacimiento,
         telefono: this.telefono,
-        genero: this.genero,                   // usa valores del select abajo
-        password: hashed
+        genero: this.genero,
+        password: this.password
       });
-      await this.showToast('Registrado correctamente');
-      this.router.navigate(['/inicio']);
+
+      if (success) {
+        await this.showToast('¡Registrado correctamente! Inicia sesión');
+        this.router.navigate(['/login']);
+      } else {
+        this.showToast('El email ya está registrado o error en el registro');
+      }
     } catch (e: any) {
       console.error(e);
-      this.showToast('Error al registrar: ' + (e?.message ?? e));
+      this.showToast('Error: ' + (e?.message ?? 'desconocido'));
+    } finally {
+      this.isLoading = false;
     }
   }
 
-  volverLogin() { this.router.navigate(['/login']); }
+  volverLogin() {
+    this.router.navigate(['/login']);
+  }
 
   private async showToast(message: string) {
     const t = await this.toastCtrl.create({ message, duration: 2000 });

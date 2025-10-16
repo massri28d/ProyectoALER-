@@ -36,6 +36,26 @@
             </ion-item>
           }
         </ion-list>
+
+        <!-- Usuario actual y botón logout -->
+        <ion-list id="user-section" style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--ion-border-color);">
+          <ion-item lines="none" *ngIf="getCurrentUser()">
+            <ion-icon aria-hidden="true" slot="start" ios="person-circle-outline" md="person-circle-sharp"></ion-icon>
+            <ion-label>
+              <h2>{{ getCurrentUser()?.nombre }}</h2>
+              <p>{{ getCurrentUser()?.email }}</p>
+            </ion-label>
+          </ion-item>
+
+          <ion-button
+            expand="block"
+            color="danger"
+            (click)="logout()"
+            style="margin-top: 10px;">
+            <ion-icon aria-hidden="true" slot="start" ios="log-out-outline" md="log-out-sharp"></ion-icon>
+            Cerrar sesión
+          </ion-button>
+        </ion-list>
       </ion-content>
     </ion-menu>
 
