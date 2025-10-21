@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar,
   IonList, IonItem, IonLabel, IonInput,
-  IonButton, IonImg
+  IonButton
 } from '@ionic/angular/standalone';
 
 @Component({
@@ -17,7 +17,7 @@ import {
     CommonModule, FormsModule,
     IonContent, IonHeader, IonTitle, IonToolbar,
     IonList, IonItem, IonLabel, IonInput,
-    IonButton, IonImg
+    IonButton
   ]
 })
 export class LoginPage {

@@ -51,7 +51,8 @@
       </ion-item>
     </ion-list>
 
-    <ion-button expand="block" color="primary" (click)="registrar()">REGISTRARSE</ion-button>
-    <ion-button expand="block" fill="clear" color="primary" (click)="volverLogin()">VOLVER AL LOGIN</ion-button>
+    <ion-button expand="block" (click)="registrar()" [disabled]="saving">
+    {{ saving ? 'Guardando...' : 'REGISTRARSE' }}</ion-button>
+    <ion-button expand="block" fill="clear" color="primary" (click)="volverLogin()"[disabled]="saving">VOLVER AL LOGIN</ion-button>
   </div>
 </ion-content>

@@ -30,9 +30,6 @@ import {
   bookmarkOutline, bookmarkSharp
 } from 'ionicons/icons';
 
-// SQLite
-import { DatabaseService } from './services/database.service';
-
 // Status bar (Capacitor)
 import { StatusBar, Style } from '@capacitor/status-bar';
 
@@ -74,8 +71,7 @@ export class AppComponent {
   public labels: string[] = [];
 
   constructor(
-    private platform: Platform,
-    private dbService: DatabaseService
+    private platform: Platform
   ) {
     addIcons({
       homeOutline, homeSharp,
@@ -91,17 +87,19 @@ export class AppComponent {
   async ngOnInit() {
     await this.platform.ready();
 
-    // 1) Evita que la status bar tape el header
+    // Solo configurar la status bar
     try {
       await StatusBar.setOverlaysWebView({ overlay: false });
-      await StatusBar.setStyle({ style: Style.Dark });            // texto claro sobre barra oscura
-      await StatusBar.setBackgroundColor({ color: '#17864B' });   // tu verde
-    } catch {
-      // en web/no soportado, simplemente ignora
+      await StatusBar.setStyle({ style: Style.Dark });
+      await StatusBar.setBackgroundColor({ color: '#17864B' });
+      console.log('[APP] Status bar configurada');
+    } catch (error) {
+      // En web o cuando no está soportado, simplemente ignora
+      console.log('[APP] Status bar no disponible (web)');
     }
 
-    // 2) Inicializa SQLite y crea tablas
-    await this.dbService.initializePlugin();
+    // La BD ya fue inicializada por APP_INITIALIZER en main.ts
+    console.log(' [APP] App component inicializado (BD ya está lista)');
   }
 
   getIconForTitle(title: string): string {
