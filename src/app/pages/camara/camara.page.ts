@@ -5,12 +5,14 @@ import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonIcon,
   IonItem, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
   IonSpinner, IonImg, IonFab, IonFabButton,
-  IonSelect, IonSelectOption, IonList, IonLabel, IonChip
+  IonSelect, IonSelectOption, IonList, IonLabel, IonChip, IonBadge
 } from '@ionic/angular/standalone';
 import { Router, RouterModule } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
 import { OcrService } from '../../services/ocr.service';
+
+type AnyImageCapture = any;
 
 @Component({
   selector: 'app-camara',
@@ -22,7 +24,7 @@ import { OcrService } from '../../services/ocr.service';
     IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonIcon,
     IonItem, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
     IonSpinner, IonImg, IonFab, IonFabButton,
-    IonSelect, IonSelectOption, IonList, IonLabel, IonChip
+    IonSelect, IonSelectOption, IonList, IonLabel, IonChip, IonBadge
   ]
 })
 export class CamaraPage implements AfterViewInit, OnDestroy {
@@ -31,6 +33,9 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
   @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
 
   private stream?: MediaStream;
+  private track?: MediaStreamTrack;
+  private imageCapture?: AnyImageCapture;
+
   devices: MediaDeviceInfo[] = [];
   selectedDeviceId?: string;
 
@@ -52,7 +57,6 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
   constructor(private ocr: OcrService, private router: Router) {}
 
   async ngAfterViewInit() {
-    // Webcam solo en PWA/web
     if (this.isWeb) await this.openWebcam();
   }
 
@@ -70,34 +74,46 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     }
   }
 
- async takePhotoNative() {
-  await this.ensurePerms();
-  const photo = await Camera.getPhoto({
-    source: CameraSource.Camera,
-    resultType: CameraResultType.DataUrl,
-    quality: 100,
-    width: 2000,
-    correctOrientation: true,
-    saveToGallery: false,
-  });
-  this.photoDataUrl = photo.dataUrl!;
-  await this.runOcrAndParse();
-}
+  private async dataUrlFromPhoto(photo: Photo): Promise<string> {
+    const path = photo.webPath || photo.path || (photo as any).savePath;
+    if (!path && photo.dataUrl) return photo.dataUrl;
+    const res = await fetch(path!);
+    const blob = await res.blob();
+    return await new Promise<string>(resolve => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result as string);
+      fr.readAsDataURL(blob);
+    });
+  }
+
+  async takePhotoNative() {
+    await this.ensurePerms();
+    const photo = await Camera.getPhoto({
+      source: CameraSource.Camera,
+      resultType: CameraResultType.Uri, // ← resolución completa
+      quality: 100,
+      allowEditing: false,
+      correctOrientation: true,
+      saveToGallery: false,
+    });
+    this.photoDataUrl = await this.dataUrlFromPhoto(photo);
+    await this.runOcrAndParse();
+  }
 
   async pickFromGalleryNative() {
-  await this.ensurePerms();
-  const photo = await Camera.getPhoto({
-    source: CameraSource.Photos,
-    resultType: CameraResultType.DataUrl,
-    quality: 100,
-    width: 2000,
-    correctOrientation: true,
-  });
-  this.photoDataUrl = photo.dataUrl!;
-  await this.runOcrAndParse();
-}
+    await this.ensurePerms();
+    const photo = await Camera.getPhoto({
+      source: CameraSource.Photos,
+      resultType: CameraResultType.Uri, // ← mantiene tamaño original
+      quality: 100,
+      allowEditing: false,
+      correctOrientation: true,
+    });
+    this.photoDataUrl = await this.dataUrlFromPhoto(photo);
+    await this.runOcrAndParse();
+  }
 
-  // ===== WEB / PWA (getUserMedia) =====
+  // ===== WEB / PWA (getUserMedia + ImageCapture) =====
   private async listCameras() {
     const all = await navigator.mediaDevices.enumerateDevices();
     this.devices = all.filter(d => d.kind === 'videoinput');
@@ -114,14 +130,28 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
       await this.listCameras().catch(() => {});
       const constraints: MediaStreamConstraints = {
         video: this.selectedDeviceId
-          ? { deviceId: { exact: this.selectedDeviceId } }
-          : { facingMode: { ideal: 'environment' } }
+          ? { deviceId: { exact: this.selectedDeviceId }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 }, facingMode: { ideal: 'environment' } as any }
+          : { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 }, facingMode: { ideal: 'environment' } as any }
       };
+
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
       const v = this.videoRef.nativeElement;
       v.srcObject = this.stream;
       await v.play().catch(() => {});
       this.webcamReady = true;
+
+      this.track = this.stream.getVideoTracks()[0];
+      try {
+        if ((window as any).ImageCapture) {
+          this.imageCapture = new (window as any).ImageCapture(this.track);
+        }
+        const caps: any = this.track.getCapabilities?.();
+        const adv: any = {};
+        if (caps?.focusMode?.includes?.('continuous')) adv.focusMode = 'continuous';
+        if (caps?.zoom) adv.zoom = Math.min(caps.zoom.max, (caps.zoom.min ?? 1) + (caps.zoom.step ?? 0) * 2);
+        if (Object.keys(adv).length) await this.track.applyConstraints({ advanced: [adv] });
+      } catch {}
+
       await this.listCameras().catch(() => {});
     } catch (e: any) {
       this.webcamReady = false;
@@ -137,6 +167,8 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
   private stopWebcam() {
     this.stream?.getTracks().forEach(t => t.stop());
     this.stream = undefined;
+    this.track = undefined;
+    this.imageCapture = undefined;
     this.webcamReady = false;
   }
 
@@ -146,22 +178,47 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     await this.openWebcam();
   }
 
-  // Escala el frame para mejorar OCR (texto pequeño)
-  private captureToDataUrlFromVideo(scale = 1.8): string {
+  private captureToDataUrlFromVideo(scale = 1.9, crop = 0.03): string {
     const video = this.videoRef.nativeElement;
-    const w = Math.max(640, Math.floor((video.videoWidth || 1280) * scale));
-    const h = Math.max(480, Math.floor((video.videoHeight || 720) * scale));
-    const canvas = this.canvasRef.nativeElement;
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(video, 0, 0, w, h);
-    return canvas.toDataURL('image/jpeg', 0.95);
+    const baseW = video.videoWidth || 1280;
+    const baseH = video.videoHeight || 720;
+
+    const w = Math.max(640, Math.floor(baseW * scale));
+    const h = Math.max(480, Math.floor(baseH * scale));
+
+    const c = this.canvasRef.nativeElement;
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d')!;
+
+    const sx = Math.round(baseW * crop);
+    const sy = Math.round(baseH * crop);
+    const sw = baseW - 2 * sx;
+    const sh = baseH - 2 * sy;
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+
+    return c.toDataURL('image/jpeg', 0.95);
+  }
+
+  private async blobToDataUrl(blob: Blob): Promise<string> {
+    return await new Promise<string>(res => {
+      const fr = new FileReader();
+      fr.onload = () => res(fr.result as string);
+      fr.readAsDataURL(blob);
+    });
   }
 
   private async captureFromWebcam() {
+    if (this.imageCapture?.takePhoto) {
+      try {
+        const blob: Blob = await this.imageCapture.takePhoto();
+        this.photoDataUrl = await this.blobToDataUrl(blob);
+        await this.runOcrAndParse();
+        return;
+      } catch {}
+    }
     if (!this.videoRef?.nativeElement) return;
     if (!this.videoRef.nativeElement.videoWidth) await new Promise(r => setTimeout(r, 120));
-    this.photoDataUrl = this.captureToDataUrlFromVideo(1.8);
+    this.photoDataUrl = this.captureToDataUrlFromVideo(1.9, 0.03);
     await this.runOcrAndParse();
   }
 
@@ -195,7 +252,7 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
       this.rawText = await this.ocr.recognize(this.photoDataUrl);
       const { cleanedText, ingredientes, alergenos } = this.processLabel(this.rawText);
       this.ocrText = cleanedText;
-      this.ingredientes = ingredientes;
+      this.ingredientes = this.postProcessIngredientes(ingredientes);
       this.alergenos = alergenos;
     } catch (e) {
       console.error('[OCR] error:', e);
@@ -210,20 +267,23 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     let txt = (input || '')
       .replace(/-\s*\n\s*/g, '')
       .replace(/\n+/g, ' ')
-      .replace(/[•·▪●]/g, ',')
+      .replace(/[•·▪●・]/g, ', ')
       .replace(/\s{2,}/g, ' ')
       .trim();
 
-    // Bloque de “Ingredientes”
-    const startMatch = /(ingredientes?)\s*[:\-]?\s*/i.exec(txt);
+    const startRe = /(ingredientes?|ingredients?|composici[oó]n|componentes?)\s*[:\-]?\s*/i;
+    const startMatch = startRe.exec(txt);
+
     let bloque = '';
     if (startMatch) {
       const startIdx = startMatch.index + startMatch[0].length;
       const after = txt.slice(startIdx);
-      const corte = /(información|tabla|nutric|contenido (neto)?|contiene\b|al[ée]rgen|puede contener|conservar|lote|fecha|venc|fabricado|elaborado|origen|modo de|advert|preparaci[oó]n)/i.exec(after);
-      bloque = (corte ? after.slice(0, corte.index) : after).trim();
+      const corteRe =
+        /(informaci[oó]n|tabla|nutric|contenido (neto)?|contiene\b|al[ée]rgen|puede contener|conservar|lote|fecha|venc|fabricad|elaborad|origen|modo de|advert|preparaci[oó]n|presentaci[oó]n|calor[ií]as|porci[oó]n)/i;
+      const m = corteRe.exec(after);
+      bloque = (m ? after.slice(0, m.index) : after).trim();
     } else {
-      bloque = txt.slice(0, 600);
+      bloque = txt.slice(0, 800);
     }
 
     const ingredientes = this.splitIngredientsOutsideParens(bloque)
@@ -245,7 +305,6 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
       buf += ch;
     }
     if (buf.trim()) out.push(buf.trim());
-
     return out.flatMap((item: string) =>
       (item.includes(' y ') && !/[()]/.test(item))
         ? item.split(/\s+y\s+/i).map((s: string) => s.trim()).filter(Boolean)
@@ -253,14 +312,53 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     );
   }
 
+  /** Limpia, corrige OCR común, deduplica y ordena A→Z */
+  private postProcessIngredientes(list: string[]): string[] {
+    const cleaned = list
+      .map(s => this.normalizeIng(s))
+      .map(s => s.replace(/\b(\d+[.,]?\d*)\s*(%|mg|g|kg|ug|mcg|kcal)\b/gi, '').trim())
+      .map(s => s.replace(/[,:;.\-–—]+$/g, '').trim())
+      .map(s => this.fixCommonOCR(s))
+      .filter(s => s.length >= 2 && !/^(informaci|tabla|vitaminas|minerales|energ[ií]a|porci[oó]n)/i.test(s));
+
+    const uniq = Array.from(new Set(cleaned));
+    return uniq
+      .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
+      .map(s => this.titleCaseEs(s));
+  }
+
+  private normalizeIng(s: string): string {
+    return (s || '')
+      .replace(/^[+•·▪●\-–—,.;:|§™®©]+/g, '')
+      .replace(/[|§™®©]+/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .replace(/\(\s*$/,'')
+      .trim();
+  }
+
+  /** Correcciones OCR típicas (muy conservador) */
+  private fixCommonOCR(s: string): string {
+    return s
+      .replace(/\bina de trigo\b/i, 'harina de trigo') // “Ina de Trigo” → “Harina de trigo”
+      ;
+  }
+
+  private titleCaseEs(s: string): string {
+    const keepLower = ['de', 'del', 'la', 'las', 'los', 'y', 'o', 'en', 'con', 'para', 'a'];
+    return s.toLowerCase()
+      .split(' ')
+      .map((w, i) => (i > 0 && keepLower.includes(w)) ? w : w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+  }
+
   private detectAlergenos(textLower: string): string[] {
     const has = (re: RegExp) => re.test(textLower);
     const f: string[] = [];
     if (has(/\bgluten|trigo|cebada|centeno|avena\b/)) f.push('Gluten');
-    if (has(/\bleche|lactosa|suero de leche|casein\b/)) f.push('Leche');
-    if (has(/\bhuevo|al[bv]úmina\b/)) f.push('Huevo');
+    if (has(/\bleche|lactosa|suero de leche|casein[aeo]?|lactosuero\b/)) f.push('Leche');
+    if (has(/\bhuevo|al[bv]úmina|ov[oó]albúmina\b/)) f.push('Huevo');
     if (has(/\bsoja|soya\b/)) f.push('Soya');
-    if (has(/\bman[ií]|peanut\b/)) f.push('Maní');
+    if (has(/\bman[ií]|cacahuate|peanut\b/)) f.push('Maní');
     if (has(/\balmendra|nuez(?! moscada)|avellana|pistacho|anacardo|cashew|pecana|macadamia\b/)) f.push('Frutos secos');
     if (has(/\bpescado|at[uú]n|salm[oó]n|merluza|jurel\b/)) f.push('Pescado');
     if (has(/\bcamar[oó]n|langost|cangrejo|jaiba|ostri|ost[ií]on|mejill[oó]n|almeja|calamar|pulpo\b/)) f.push('Crustáceos/Moluscos');

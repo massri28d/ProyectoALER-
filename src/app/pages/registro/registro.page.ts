@@ -5,11 +5,9 @@ import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar,
   IonList, IonItem, IonLabel, IonInput,
-  IonSelect, IonSelectOption, IonButton, 
+  IonSelect, IonSelectOption, IonButton, IonSpinner, ToastController
 } from '@ionic/angular/standalone';
-import { ToastController, LoadingController } from '@ionic/angular';
-import { DatabaseService } from 'src/app/services/database.service';
-import * as bcrypt from 'bcryptjs';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-registro',
@@ -20,7 +18,7 @@ import * as bcrypt from 'bcryptjs';
     CommonModule, FormsModule,
     IonContent, IonHeader, IonTitle, IonToolbar,
     IonList, IonItem, IonLabel, IonInput,
-    IonSelect, IonSelectOption, IonButton
+    IonSelect, IonSelectOption, IonButton, IonSpinner
   ]
 })
 export class RegistroPage {
@@ -31,71 +29,46 @@ export class RegistroPage {
   telefono = '';
   genero = '';
   password = '';
-
-   saving = false;
-
-  private dbReady = false;
+  isLoading = false;
 
   constructor(
     private router: Router,
-    private db: DatabaseService,
-    private toastCtrl: ToastController,
-    private loadingCtrl: LoadingController
+    private auth: AuthService,
+    private toastCtrl: ToastController
   ) {}
 
   async registrar() {
     if (!this.email || !this.rut || !this.nombre || !this.telefono || !this.genero || !this.password) {
-      return this.showToast('Completa todos los campos obligatorios');
+      return this.showToast('Completa todos los campos');
     }
-    
-    if (!/^\S+@\S+\.\S+$/.test(this.email)) {
-      return this.showToast('Email invalido');
-    }
-    
-    if (!/^\d{8,15}$/.test(this.telefono)) {
-      return this.showToast('Telefono invalido (solo numeros, 8-15 digitos)');
-    }
-    
-    if (this.password.length < 6) {
-      return this.showToast('La contrasena debe tener minimo 6 caracteres');
-    }
+    if (!/^\S+@\S+\.\S+$/.test(this.email)) return this.showToast('Email inválido');
+    if (!/^\d{8,15}$/.test(this.telefono)) return this.showToast('Teléfono inválido (solo números)');
+    if (this.password.length < 6) return this.showToast('Mínimo 6 caracteres en contraseña');
 
-    const loading = await this.loadingCtrl.create({
-      message: 'Registrando usuario...',
-    });
-    await loading.present();
+    this.isLoading = true;
 
     try {
-      console.log('[REGISTRO] Iniciando registro para:', this.email);
-      
-      const hashed = bcrypt.hashSync(this.password, 10);
-      console.log('[REGISTRO] Contrasena hasheada');
-      
-      await this.db.addUser({
+      const success = await this.auth.registrar({
         email: this.email,
         rut: this.rut,
         nombre: this.nombre,
         fechaNacimiento: this.fechaNacimiento,
         telefono: this.telefono,
         genero: this.genero,
-        password: hashed
+        password: this.password
       });
-      
-      console.log('[REGISTRO] Usuario registrado exitosamente');
-      await loading.dismiss();
-      await this.showToast('Usuario registrado correctamente');
-      this.router.navigate(['/inicio']);
-      
-    } catch (e: any) {
-      console.error('[REGISTRO] Error:', e);
-      await loading.dismiss();
-      
-      const errorMsg = e?.message || String(e);
-      if (errorMsg.includes('UNIQUE constraint failed')) {
-        this.showToast('Este email ya esta registrado');
+
+      if (success) {
+        await this.showToast('¡Registrado correctamente! Inicia sesión');
+        this.router.navigate(['/login']);
       } else {
-        this.showToast('Error al registrar: ' + errorMsg);
+        this.showToast('El email ya está registrado o error en el registro');
       }
+    } catch (e: any) {
+      console.error(e);
+      this.showToast('Error: ' + (e?.message ?? 'desconocido'));
+    } finally {
+      this.isLoading = false;
     }
   }
 
@@ -104,11 +77,7 @@ export class RegistroPage {
   }
 
   private async showToast(message: string) {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 3000,
-      position: 'bottom'
-    });
-    await toast.present();
+    const t = await this.toastCtrl.create({ message, duration: 2000 });
+    t.present();
   }
 }

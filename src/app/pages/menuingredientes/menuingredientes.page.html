@@ -13,36 +13,34 @@
 
   <div class="welcome-container">
     <ion-button expand="block" shape="round" color="primary" routerLink="/inicio">
-      <ion-icon name="information-circle-outline" slot="start"></ion-icon>
-    inicio
+      <ion-icon slot="start" name="information-circle-outline"></ion-icon>
+      Inicio
     </ion-button>
   </div>
 
-
   <ion-card>
-  <ion-card-header>
-    <ion-card-title>Selecciona tus alergias</ion-card-title>
-  </ion-card-header>
+    <ion-card-header>
+      <ion-card-title>Selecciona tus alergias</ion-card-title>
+    </ion-card-header>
 
-  <ion-card-content>
-    <ion-list>
-      <ion-item *ngFor="let alergia of listaAlergias">
-        <ion-label>{{ alergia.nombre }}</ion-label>
-        <ion-checkbox slot="end" [(ngModel)]="alergia.seleccionado"></ion-checkbox>
-      </ion-item>
-    </ion-list>
+    <ion-card-content>
+      <ion-list>
+        <ion-item *ngFor="let alergia of listaAlergias">
+          <ion-label>{{ alergia.nombre }}</ion-label>
+          <ion-checkbox slot="end" [(ngModel)]="alergia.seleccionado"></ion-checkbox>
+        </ion-item>
+      </ion-list>
 
-    <ion-button expand="full" color="success" (click)="guardarSeleccion()">Guardar selección</ion-button>
-  </ion-card-content>
-</ion-card>
-
-
+      <ion-button expand="full" color="success" (click)="guardarSeleccion()">
+        Guardar selección
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
 
   <div class="welcome-container">
     <ion-button expand="block" shape="round" color="primary" routerLink="/camara">
-      <ion-icon name="information-circle-outline" slot="start"></ion-icon>
-    Camara
+      <ion-icon slot="start" name="camera-outline"></ion-icon>
+      Cámara
     </ion-button>
   </div>
-
 </ion-content>

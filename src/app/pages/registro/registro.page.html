@@ -11,33 +11,32 @@
     <ion-list lines="full">
       <ion-item>
         <ion-label position="floating">Correo electrónico</ion-label>
-        <ion-input type="email" autocomplete="email" name="email" [(ngModel)]="email"></ion-input>
+        <ion-input type="email" autocomplete="email" name="email" [(ngModel)]="email" [disabled]="isLoading"></ion-input>
       </ion-item>
 
       <ion-item>
         <ion-label position="floating">RUT</ion-label>
-        <ion-input type="text" name="rut" maxlength="20" [(ngModel)]="rut"></ion-input>
+        <ion-input type="text" name="rut" maxlength="20" [(ngModel)]="rut" [disabled]="isLoading"></ion-input>
       </ion-item>
 
       <ion-item>
         <ion-label position="floating">Nombre</ion-label>
-        <ion-input type="text" name="nombre" [(ngModel)]="nombre"></ion-input>
+        <ion-input type="text" name="nombre" [(ngModel)]="nombre" [disabled]="isLoading"></ion-input>
       </ion-item>
 
       <ion-item>
         <ion-label position="floating">Fecha de nacimiento (opcional)</ion-label>
-        <ion-input type="date" name="fechaNacimiento" [(ngModel)]="fechaNacimiento"></ion-input>
+        <ion-input type="date" name="fechaNacimiento" [(ngModel)]="fechaNacimiento" [disabled]="isLoading"></ion-input>
       </ion-item>
 
       <ion-item>
         <ion-label position="floating">Teléfono</ion-label>
-        <ion-input type="tel" inputmode="numeric" name="telefono" [(ngModel)]="telefono"></ion-input>
+        <ion-input type="tel" inputmode="numeric" name="telefono" [(ngModel)]="telefono" [disabled]="isLoading"></ion-input>
       </ion-item>
 
       <ion-item>
         <ion-label position="floating">Género</ion-label>
-        <ion-select name="genero" interface="popover" [(ngModel)]="genero">
-          <!-- Usa exactamente estos textos (coinciden con tu CHECK de la DB) -->
+        <ion-select name="genero" interface="popover" [(ngModel)]="genero" [disabled]="isLoading">
           <ion-select-option value="Masculino">Masculino</ion-select-option>
           <ion-select-option value="Femenino">Femenino</ion-select-option>
           <ion-select-option value="Otro">Otro</ion-select-option>
@@ -47,12 +46,19 @@
 
       <ion-item>
         <ion-label position="floating">Contraseña</ion-label>
-        <ion-input type="password" autocomplete="new-password" name="password" [(ngModel)]="password"></ion-input>
+        <ion-input type="password" autocomplete="new-password" name="password" [(ngModel)]="password" [disabled]="isLoading"></ion-input>
       </ion-item>
     </ion-list>
 
-    <ion-button expand="block" (click)="registrar()" [disabled]="saving">
-    {{ saving ? 'Guardando...' : 'REGISTRARSE' }}</ion-button>
-    <ion-button expand="block" fill="clear" color="primary" (click)="volverLogin()"[disabled]="saving">VOLVER AL LOGIN</ion-button>
+    <div *ngIf="isLoading" style="display: flex; justify-content: center; margin: 20px 0;">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+
+    <ion-button expand="block" color="primary" (click)="registrar()" [disabled]="isLoading">
+      {{ isLoading ? 'Registrando...' : 'REGISTRARSE' }}
+    </ion-button>
+    <ion-button expand="block" fill="clear" color="primary" (click)="volverLogin()" [disabled]="isLoading">
+      VOLVER AL LOGIN
+    </ion-button>
   </div>
 </ion-content>

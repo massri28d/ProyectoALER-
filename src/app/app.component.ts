@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import {
   RouterLink,
-  RouterLinkActive
+  RouterLinkActive,
+  Router
 } from '@angular/router';
 import {
   IonApp,
@@ -17,6 +18,7 @@ import {
   IonLabel,
   IonRouterOutlet,
   IonRouterLink,
+  IonButton,
   Platform
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -27,8 +29,14 @@ import {
   peopleOutline, peopleSharp,
   logInOutline, logInSharp,
   personCircleOutline, personCircleSharp,
-  bookmarkOutline, bookmarkSharp
+  bookmarkOutline, bookmarkSharp,
+  logOutOutline, logOutSharp
 } from 'ionicons/icons';
+import { CommonModule } from '@angular/common'; 
+
+// SQLite
+import { DatabaseService } from './services/database.service';
+import { AuthService } from './services/auth.service';
 
 // Status bar (Capacitor)
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -39,6 +47,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
   styleUrls: ['app.component.scss'],
   standalone: true,
   imports: [
+    CommonModule,
     RouterLink,
     RouterLinkActive,
     IonApp,
@@ -53,7 +62,8 @@ import { StatusBar, Style } from '@capacitor/status-bar';
     IonIcon,
     IonLabel,
     IonRouterLink,
-    IonRouterOutlet
+    IonRouterOutlet,
+    IonButton
   ]
 })
 export class AppComponent {
@@ -62,7 +72,6 @@ export class AppComponent {
     { title: 'Detectar ingredientes', url: '/menuingredientes' },
     { title: 'Configuraciones', url: '/configuraciones' },
     { title: '¿ Quienes somos ?', url: '/quienessomos' },
-    { title: 'Inicio de sesion', url: '/login' },
   ].map(page => ({
     ...page,
     icon: this.getIconForTitle(page.title)
@@ -71,7 +80,10 @@ export class AppComponent {
   public labels: string[] = [];
 
   constructor(
-    private platform: Platform
+    private platform: Platform,
+    private dbService: DatabaseService,
+    private authService: AuthService,
+    private router: Router
   ) {
     addIcons({
       homeOutline, homeSharp,
@@ -80,26 +92,25 @@ export class AppComponent {
       peopleOutline, peopleSharp,
       logInOutline, logInSharp,
       personCircleOutline, personCircleSharp,
-      bookmarkOutline, bookmarkSharp
+      bookmarkOutline, bookmarkSharp,
+      logOutOutline, logOutSharp
     });
   }
 
   async ngOnInit() {
     await this.platform.ready();
 
-    // Solo configurar la status bar
+    // 1) Evita que la status bar tape el header
     try {
       await StatusBar.setOverlaysWebView({ overlay: false });
       await StatusBar.setStyle({ style: Style.Dark });
       await StatusBar.setBackgroundColor({ color: '#17864B' });
-      console.log('[APP] Status bar configurada');
-    } catch (error) {
-      // En web o cuando no está soportado, simplemente ignora
-      console.log('[APP] Status bar no disponible (web)');
+    } catch {
+      // en web/no soportado, simplemente ignora
     }
 
-    // La BD ya fue inicializada por APP_INITIALIZER en main.ts
-    console.log(' [APP] App component inicializado (BD ya está lista)');
+    // 2) Inicializa SQLite y crea tablas (opcional por ahora)
+    // await this.dbService.initializePlugin();
   }
 
   getIconForTitle(title: string): string {
@@ -110,5 +121,20 @@ export class AppComponent {
     if (lowerTitle.includes('quienes') || lowerTitle.includes('somos')) return 'people';
     if (lowerTitle.includes('sesion')) return 'log-in';
     return 'bookmark';
+  }
+
+  /**
+   * Cierra sesión y redirige al login
+   */
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
+  /**
+   * Obtiene el usuario actual
+   */
+  getCurrentUser() {
+    return this.authService.getCurrentUser();
   }
 }
