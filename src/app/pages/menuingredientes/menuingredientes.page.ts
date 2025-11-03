@@ -88,12 +88,12 @@ export class MenuingredientesPage implements OnInit {
       
       if (resultado.exitosas > 0) {
         const nombres = seleccionadas.map(a => a.nombre).join(', ');
-        this.mostrarToast(`✅ Alergias guardadas: ${nombres}`);
+        this.mostrarToast(` Alergias guardadas: ${nombres}`);
         
         // Recargar alergias
         await this.cargarAlergias();
       } else if (resultado.fallidas > 0) {
-        this.mostrarToast('⚠️ Algunas alergias no se pudieron guardar');
+        this.mostrarToast(' Algunas alergias no se pudieron guardar');
       }
     } catch (error) {
       console.error('Error guardando alergias:', error);
