@@ -1,6 +1,7 @@
-import { Injectable, inject } from '@angular/core';
-import * as bcrypt from 'bcryptjs';
-import { BehaviorSubject } from 'rxjs';
+// src/app/services/auth.service.ts
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable, lastValueFrom } from 'rxjs';
+import { ApiService } from './api.service';
 
 interface Usuario {
   id: number;
@@ -10,60 +11,17 @@ interface Usuario {
   telefono: string;
   genero: string;
   fechaNacimiento?: string;
-  password: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private currentUserSubject = new BehaviorSubject<any>(null);
+  private currentUserSubject = new BehaviorSubject<Usuario | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
-  
-  // Base de datos temporal en memoria
-  private usuariosTemporal: Usuario[] = [];
-  private usuariosId = 1;
 
-  constructor() {
+  constructor(private apiService: ApiService) {
     this.restoreSession();
-    this.inicializarUsuariosDemo();
-  }
-
-  /**
-   * Inicializa usuarios de demostración para pruebas
-   */
-  private inicializarUsuariosDemo() {
-    // Usuario demo para pruebas
-    const passwordDemo = bcrypt.hashSync('123456', 10);
-    
-    this.usuariosTemporal = [
-      {
-        id: 1,
-        email: 'usuario@test.com',
-        nombre: 'Usuario Test',
-        rut: '12345678-9',
-        telefono: '912345678',
-        genero: 'Masculino',
-        fechaNacimiento: '1990-01-01',
-        password: passwordDemo
-      },
-      {
-        id: 2,
-        email: 'admin@test.com',
-        nombre: 'Admin Sistema',
-        rut: '98765432-1',
-        telefono: '987654321',
-        genero: 'Femenino',
-        fechaNacimiento: '1985-05-15',
-        password: passwordDemo
-      }
-    ];
-    
-    this.usuariosId = 3;
-    
-    console.log(' Usuarios demo inicializados');
-    console.log(' Email: usuario@test.com | Contraseña: 123456');
-    console.log(' Email: admin@test.com | Contraseña: 123456');
   }
 
   /**
@@ -86,46 +44,42 @@ export class AuthService {
    */
   async login(email: string, password: string): Promise<boolean> {
     try {
-      if (!email || !password) return false;
-
-      const user = this.usuariosTemporal.find(u => u.email === email);
-
-      if (!user) {
-        console.error('Usuario no encontrado');
+      if (!email || !password) {
+        console.error('Email y contraseña son requeridos');
         return false;
       }
 
-      // Comparar contraseña con hash almacenado
-      const isValid = bcrypt.compareSync(password, user.password);
+      // Llamada a la API
+      const usuario = await lastValueFrom(this.apiService.login(email, password));
 
-      if (!isValid) {
-        console.error('Contraseña incorrecta');
-        return false;
+      if (usuario) {
+        // Almacenar usuario en sesión
+        const userData: Usuario = {
+          id: usuario.id,
+          email: usuario.email,
+          nombre: usuario.nombre,
+          rut: usuario.rut,
+          telefono: usuario.telefono,
+          genero: usuario.genero,
+          fechaNacimiento: usuario.fechaNacimiento
+        };
+
+        sessionStorage.setItem('currentUser', JSON.stringify(userData));
+        this.currentUserSubject.next(userData);
+
+        console.log('✅ Login exitoso:', userData.nombre);
+        return true;
       }
 
-      // Almacenar usuario en sesión (sin contraseña)
-      const userData = {
-        id: user.id,
-        email: user.email,
-        nombre: user.nombre,
-        rut: user.rut,
-        telefono: user.telefono,
-        genero: user.genero,
-        fechaNacimiento: user.fechaNacimiento
-      };
-
-      sessionStorage.setItem('currentUser', JSON.stringify(userData));
-      this.currentUserSubject.next(userData);
-
-      return true;
-    } catch (e) {
-      console.error('Error en login:', e);
+      return false;
+    } catch (error: any) {
+      console.error('Error en login:', error.message || error);
       return false;
     }
   }
 
   /**
-   * Registra un nuevo usuario (temporal en memoria)
+   * Registra un nuevo usuario
    */
   async registrar(datosRegistro: {
     email: string;
@@ -137,46 +91,25 @@ export class AuthService {
     password: string;
   }): Promise<boolean> {
     try {
-      // Verificar si el email ya existe
-      const existe = this.usuariosTemporal.find(u => u.email === datosRegistro.email);
-      if (existe) {
-        console.error('El email ya está registrado');
+      // Validaciones básicas
+      if (!datosRegistro.email || !datosRegistro.password) {
+        console.error('Email y contraseña son requeridos');
         return false;
       }
 
-      // Hash de la contraseña
-      const passwordHash = bcrypt.hashSync(datosRegistro.password, 10);
+      // Llamada a la API
+      const response = await lastValueFrom(this.apiService.registrar(datosRegistro));
 
-      // Crear nuevo usuario
-      const nuevoUsuario: Usuario = {
-        id: this.usuariosId++,
-        email: datosRegistro.email,
-        nombre: datosRegistro.nombre,
-        rut: datosRegistro.rut,
-        telefono: datosRegistro.telefono,
-        genero: datosRegistro.genero,
-        fechaNacimiento: datosRegistro.fechaNacimiento,
-        password: passwordHash
-      };
+      if (response.success) {
+        console.log('✅ Usuario registrado correctamente');
+        return true;
+      }
 
-      this.usuariosTemporal.push(nuevoUsuario);
-      console.log(' Usuario registrado correctamente:', nuevoUsuario.email);
-      
-      return true;
-    } catch (e) {
-      console.error('Error en registro:', e);
+      return false;
+    } catch (error: any) {
+      console.error('Error en registro:', error.message || error);
       return false;
     }
-  }
-
-  /**
-   * Obtiene todos los usuarios (para pruebas)
-   */
-  getUsuarios(): Usuario[] {
-    return this.usuariosTemporal.map(u => ({
-      ...u,
-      password: '' // No devolver la contraseña
-    }));
   }
 
   /**
@@ -185,12 +118,13 @@ export class AuthService {
   logout() {
     sessionStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
+    console.log('✅ Sesión cerrada');
   }
 
   /**
    * Obtiene el usuario actual
    */
-  getCurrentUser(): any {
+  getCurrentUser(): Usuario | null {
     return this.currentUserSubject.value;
   }
 
@@ -199,5 +133,25 @@ export class AuthService {
    */
   isAuthenticated(): boolean {
     return this.currentUserSubject.value !== null;
+  }
+
+  /**
+   * Obtiene el ID del usuario actual
+   */
+  getCurrentUserId(): number | null {
+    const user = this.currentUserSubject.value;
+    return user ? user.id : null;
+  }
+
+  /**
+   * Obtiene todos los usuarios (para módulo de administración)
+   */
+  async obtenerUsuarios(): Promise<any[]> {
+    try {
+      return await lastValueFrom(this.apiService.obtenerUsuarios());
+    } catch (error: any) {
+      console.error('Error obteniendo usuarios:', error.message || error);
+      return [];
+    }
   }
 }

@@ -1,46 +1,72 @@
 <ion-header [translucent]="true">
   <ion-toolbar color="primary">
-    <ion-title>Menu ingredientes</ion-title>
+    <ion-title>Menú ingredientes</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="menu-content">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">Menu ingredientes</ion-title>
+      <ion-title size="large">Menú ingredientes</ion-title>
     </ion-toolbar>
   </ion-header>
 
   <div class="welcome-container">
     <ion-button expand="block" shape="round" color="primary" routerLink="/inicio">
-      <ion-icon slot="start" name="information-circle-outline"></ion-icon>
+      <ion-icon name="home-outline" slot="start"></ion-icon>
       Inicio
     </ion-button>
   </div>
 
-  <ion-card>
+  <!-- Spinner de carga -->
+  <div *ngIf="cargando" style="display: flex; justify-content: center; padding: 40px;">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <!-- Card de alergias -->
+  <ion-card *ngIf="!cargando">
     <ion-card-header>
       <ion-card-title>Selecciona tus alergias</ion-card-title>
     </ion-card-header>
 
     <ion-card-content>
-      <ion-list>
+      <!-- Mensaje si no hay alergias -->
+      <div *ngIf="listaAlergias.length === 0" class="empty-state">
+        <p>No se encontraron alergias disponibles.</p>
+        <ion-button size="small" (click)="recargar()">Reintentar</ion-button>
+      </div>
+
+      <!-- Lista de alergias -->
+      <ion-list *ngIf="listaAlergias.length > 0">
         <ion-item *ngFor="let alergia of listaAlergias">
-          <ion-label>{{ alergia.nombre }}</ion-label>
-          <ion-checkbox slot="end" [(ngModel)]="alergia.seleccionado"></ion-checkbox>
+          <ion-label>
+            <h3>{{ alergia.nombre }}</h3>
+            <p *ngIf="alergia.descripcion">{{ alergia.descripcion }}</p>
+          </ion-label>
+          <ion-checkbox 
+            slot="end" 
+            [(ngModel)]="alergia.seleccionado"
+            [disabled]="guardando">
+          </ion-checkbox>
         </ion-item>
       </ion-list>
 
-      <ion-button expand="full" color="success" (click)="guardarSeleccion()">
-        Guardar selección
+      <!-- Botón guardar -->
+      <ion-button 
+        expand="full" 
+        color="success" 
+        (click)="guardarSeleccion()"
+        [disabled]="guardando || cargando">
+        <ion-spinner *ngIf="guardando" name="crescent" slot="start"></ion-spinner>
+        {{ guardando ? 'Guardando...' : 'Guardar selección' }}
       </ion-button>
     </ion-card-content>
   </ion-card>
 
   <div class="welcome-container">
     <ion-button expand="block" shape="round" color="primary" routerLink="/camara">
-      <ion-icon slot="start" name="camera-outline"></ion-icon>
-      Cámara
+      <ion-icon name="camera-outline" slot="start"></ion-icon>
+      Ir a Cámara
     </ion-button>
   </div>
 </ion-content>
