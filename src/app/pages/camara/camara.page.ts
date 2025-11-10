@@ -187,91 +187,153 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     reader.readAsDataURL(file);
   }
 
-  // ===== OCR + parsing =====
-  private async runOcrAndParse() {
-    if (!this.photoDataUrl) return;
-    this.scanning = true; this.ocrDone = false;
-    try {
-      this.rawText = await this.ocr.recognize(this.photoDataUrl);
-      const { cleanedText, ingredientes, alergenos } = this.processLabel(this.rawText);
-      this.ocrText = cleanedText;
-      this.ingredientes = ingredientes;
-      this.alergenos = alergenos;
-    } catch (e) {
-      console.error('[OCR] error:', e);
-      this.ocrText = ''; this.ingredientes = []; this.alergenos = [];
-      this.errorMsg = 'No se pudo reconocer texto. Intenta con más luz/enfoque.';
-    } finally {
-      this.scanning = false; this.ocrDone = true;
+// ===== OCR + procesamiento mejorado con preprocesamiento de imagen =====
+
+private async runOcrAndParse() {
+  if (!this.photoDataUrl) return;
+
+  this.scanning = true;
+  this.ocrDone = false;
+
+  try {
+    // 1. Cargar imagen original
+    const image = new Image();
+    image.src = this.photoDataUrl;
+    await new Promise(resolve => (image.onload = resolve));
+
+    // 2. Preprocesar imagen (convertir a blanco/negro)
+    const cleanedImage = this.preprocessImage(image);
+
+    // 3. Ejecutar OCR sobre la imagen mejorada
+    this.rawText = await this.ocr.recognize(cleanedImage);
+
+    // 4. Procesar el texto extraído
+    const { cleanedText, ingredientes, alergenos } = this.processLabel(this.rawText);
+    this.ocrText = cleanedText;
+    this.ingredientes = ingredientes;
+    this.alergenos = alergenos;
+  } catch (e) {
+    console.error('[OCR] error:', e);
+    this.ocrText = '';
+    this.ingredientes = [];
+    this.alergenos = [];
+    this.errorMsg = 'No se pudo reconocer texto. Intenta con más luz/enfoque.';
+  } finally {
+    this.scanning = false;
+    this.ocrDone = true;
+  }
+}
+
+// ===== Preprocesamiento: binarizar imagen para OCR =====
+private preprocessImage(image: HTMLImageElement): string {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+  canvas.width = image.width;
+  canvas.height = image.height;
+
+  ctx.drawImage(image, 0, 0);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+
+  // Convertir a escala de grises + binarizar
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i], g = data[i + 1], b = data[i + 2];
+    const gray = (r + g + b) / 3;
+    const binary = gray < 140 ? 0 : 255;
+
+    data[i] = data[i + 1] = data[i + 2] = binary; // RGB
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+  return canvas.toDataURL('image/jpeg'); // base64 de imagen tratada
+}
+
+// ===== Procesamiento de texto OCRizado =====
+private processLabel(input: string) {
+  let txt = (input || '')
+    .replace(/-\s*\n\s*/g, '')
+    .replace(/\n+/g, ' ')
+    .replace(/[•·▪●]/g, ',')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\b1ngredientes\b/i, 'ingredientes')
+    .replace(/0rigen/i, 'origen')
+    .replace(/,(\S)/g, ', $1')
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, '')
+    .trim();
+
+  const startMatch = /\bingredientes?\b[\s:–\-]*/i.exec(txt);
+  let bloque = '';
+  if (startMatch) {
+    const startIdx = startMatch.index + startMatch[0].length;
+    const after = txt.slice(startIdx);
+    const corte = /(informacion|tabla|nutric|contenido neto|contiene\b|alergen|puede contener|conservar|lote|fecha|venc|fabricado|elaborado|origen|modo de|advert|preparacion)/i.exec(after);
+    bloque = (corte ? after.slice(0, corte.index) : after).trim();
+  } else {
+    bloque = txt.slice(0, 600);
+  }
+
+  const ingredientes = this.splitIngredientsOutsideParens(bloque)
+    .map(s => s.replace(/\s*[:;]\s*$/, '').trim())
+    .filter(Boolean);
+
+  const alergenos = this.detectAlergenos((startMatch ? bloque : txt).toLowerCase());
+
+  return { cleanedText: txt, ingredientes, alergenos };
+}
+
+// ===== Separación de ingredientes fuera de paréntesis =====
+private splitIngredientsOutsideParens(text: string): string[] {
+  const out: string[] = [];
+  let buf = '', depth = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '(') depth++;
+    if (ch === ')') depth = Math.max(0, depth - 1);
+    if ((ch === ',' || ch === ';') && depth === 0) {
+      out.push(buf.trim());
+      buf = '';
+      continue;
     }
+    buf += ch;
   }
+  if (buf.trim()) out.push(buf.trim());
 
-  private processLabel(input: string) {
-    let txt = (input || '')
-      .replace(/-\s*\n\s*/g, '')
-      .replace(/\n+/g, ' ')
-      .replace(/[•·▪●]/g, ',')
-      .replace(/\s{2,}/g, ' ')
-      .trim();
+  return out.flatMap((item: string) =>
+    (item.includes(' y ') && !/[()]/.test(item))
+      ? item.split(/\s+y\s+/i).map((s: string) => s.trim()).filter(Boolean)
+      : [item]
+  );
+}
 
-    // Bloque de “Ingredientes”
-    const startMatch = /(ingredientes?)\s*[:\-]?\s*/i.exec(txt);
-    let bloque = '';
-    if (startMatch) {
-      const startIdx = startMatch.index + startMatch[0].length;
-      const after = txt.slice(startIdx);
-      const corte = /(información|tabla|nutric|contenido (neto)?|contiene\b|al[ée]rgen|puede contener|conservar|lote|fecha|venc|fabricado|elaborado|origen|modo de|advert|preparaci[oó]n)/i.exec(after);
-      bloque = (corte ? after.slice(0, corte.index) : after).trim();
-    } else {
-      bloque = txt.slice(0, 600);
-    }
+// ===== Alérgenos =====
+private detectAlergenos(textLower: string): string[] {
+  const found: string[] = [];
 
-    const ingredientes = this.splitIngredientsOutsideParens(bloque)
-      .map(s => s.replace(/\s*[:;]\s*$/,'').trim())
-      .filter(Boolean);
+  const check = (regex: RegExp, nombre: string) => {
+    if (regex.test(textLower)) found.push(nombre);
+  };
 
-    const alergenos = this.detectAlergenos((startMatch ? bloque : txt).toLowerCase());
-    return { cleanedText: txt, ingredientes, alergenos };
-  }
+  check(/\b(gluten|trigo|cebada|centeno|avena)\b/, 'Gluten');
+  check(/\b(leche|lactosa|suero de leche|casein|lacteos|proteina de leche)\b/, 'Leche');
+  check(/\b(huevo|albumina|ovoproductos|claras de huevo)\b/, 'Huevo');
+  check(/\b(soja|soya)\b/, 'Soya');
+  check(/\b(mani|maní|peanut|cacahuate)\b/, 'Maní');
+  check(/\b(almendra|nuez(?! moscada)|avellana|pistacho|anacardo|cashew|pecana|macadamia|nueces)\b/, 'Frutos secos');
+  check(/\b(pescado|atun|salmon|merluza|jurel|tilapia)\b/, 'Pescado');
+  check(/\b(camaron|langost|cangrejo|jaiba|ostri|ostion|mejillon|almeja|calamar|pulpo)\b/, 'Crustáceos/Moluscos');
+  check(/\b(sesamo|ajonjoli)\b/, 'Sésamo');
+  check(/\b(apio)\b/, 'Apio');
+  check(/\b(mostaza)\b/, 'Mostaza');
+  check(/\b(sulfit|dioxido de azufre|so2)\b/, 'Sulfitos');
 
-  private splitIngredientsOutsideParens(text: string): string[] {
-    const out: string[] = [];
-    let buf = '', depth = 0;
-    for (let i = 0; i < text.length; i++) {
-      const ch = text[i];
-      if (ch === '(') depth++;
-      if (ch === ')') depth = Math.max(0, depth - 1);
-      if ((ch === ',' || ch === ';') && depth === 0) { out.push(buf.trim()); buf = ''; continue; }
-      buf += ch;
-    }
-    if (buf.trim()) out.push(buf.trim());
+  return [...new Set(found)];
+}
 
-    return out.flatMap((item: string) =>
-      (item.includes(' y ') && !/[()]/.test(item))
-        ? item.split(/\s+y\s+/i).map((s: string) => s.trim()).filter(Boolean)
-        : [item]
-    );
-  }
-
-  private detectAlergenos(textLower: string): string[] {
-    const has = (re: RegExp) => re.test(textLower);
-    const f: string[] = [];
-    if (has(/\bgluten|trigo|cebada|centeno|avena\b/)) f.push('Gluten');
-    if (has(/\bleche|lactosa|suero de leche|casein\b/)) f.push('Leche');
-    if (has(/\bhuevo|al[bv]úmina\b/)) f.push('Huevo');
-    if (has(/\bsoja|soya\b/)) f.push('Soya');
-    if (has(/\bman[ií]|peanut\b/)) f.push('Maní');
-    if (has(/\balmendra|nuez(?! moscada)|avellana|pistacho|anacardo|cashew|pecana|macadamia\b/)) f.push('Frutos secos');
-    if (has(/\bpescado|at[uú]n|salm[oó]n|merluza|jurel\b/)) f.push('Pescado');
-    if (has(/\bcamar[oó]n|langost|cangrejo|jaiba|ostri|ost[ií]on|mejill[oó]n|almeja|calamar|pulpo\b/)) f.push('Crustáceos/Moluscos');
-    if (has(/\bs[eé]samo|ajonjol[ií]\b/)) f.push('Sésamo');
-    if (has(/\bapio\b/)) f.push('Apio');
-    if (has(/\bmostaza\b/)) f.push('Mostaza');
-    if (has(/\bsulfit|d[ií]oxido de azufre\b|\bso2\b/)) f.push('Sulfitos');
-    return [...new Set(f)];
-  }
-
-  enviarAlMenu() {
-    this.router.navigate(['/menuingredientes'], { queryParams: { texto: this.ocrText } });
-  }
+// ===== Navegación con resultado OCR =====
+enviarAlMenu() {
+  this.router.navigate(['/menuingredientes'], {
+    queryParams: { texto: this.ocrText }
+  });
+}
 }
