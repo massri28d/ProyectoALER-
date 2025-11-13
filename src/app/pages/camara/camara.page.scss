@@ -54,18 +54,29 @@ ion-card-title { font-weight: 700; }
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 12px 14px;
-  color: #0b0b0b;          /* texto negro */
+  color: #0b0b0b;
   line-height: 1.5;
   font-size: 14px;
-  white-space: pre-wrap;    /* conserva saltos de línea */
-  word-break: break-word;   /* evita desbordes raros */
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* Ingredientes más ordenados */
 .ingredients-card {
-  --background: #fff;        /* fondo blanco del card */
-  border: 1px solid #e5e7eb; /* borde sutil */
-  border-radius: 12px;       /* esquinas suaves */
+  --background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.ingredients-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.small-note {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
 }
 
 .ingredients-list ion-item {
@@ -75,16 +86,6 @@ ion-card-title { font-weight: 700; }
   --inner-padding-bottom: 6px;
 }
 
-.ingredients-list ion-label {
-  white-space: normal;
-}
-
-.ingredients-list ion-item {
-  --padding-start: 0;
-  --inner-padding-end: 0;
-  --inner-padding-top: 6px;
-  --inner-padding-bottom: 6px;
-}
 .ingredients-list ion-label {
   white-space: normal;
 }
@@ -94,3 +95,152 @@ ion-card-title { font-weight: 700; }
 
 /* Utilidades */
 .mt { margin-top: 12px; }
+
+/* ===== NUEVO: Estilos para verificación ===== */
+
+/* Tarjeta de producto seguro */
+.producto-seguro {
+  border: 3px solid #10dc60;
+  background: linear-gradient(135deg, #d4f8e8 0%, #e8fdf5 100%);
+  box-shadow: 0 6px 20px rgba(16, 220, 96, 0.3);
+  animation: pulseGreen 2s ease-in-out infinite;
+
+  ion-card-header {
+    background: linear-gradient(135deg, #10dc60 0%, #0ec254 100%);
+    color: white;
+    border-radius: 8px 8px 0 0;
+    padding: 16px;
+  }
+
+  ion-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    
+    ion-icon {
+      font-size: 28px;
+    }
+  }
+}
+
+/* Tarjeta de producto peligroso */
+.producto-peligroso {
+  border: 3px solid #f04141;
+  background: linear-gradient(135deg, #ffe0e0 0%, #fff5f5 100%);
+  box-shadow: 0 6px 20px rgba(240, 65, 65, 0.3);
+  animation: pulseRed 2s ease-in-out infinite;
+
+  ion-card-header {
+    background: linear-gradient(135deg, #f04141 0%, #d93636 100%);
+    color: white;
+    border-radius: 8px 8px 0 0;
+    padding: 16px;
+  }
+
+  ion-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    
+    ion-icon {
+      font-size: 28px;
+    }
+  }
+}
+
+/* Contenido de verificación */
+.verification-result {
+  padding: 16px 0;
+
+  .safe-message {
+    color: #0a7a3e;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+
+    strong {
+      font-size: 18px;
+      display: block;
+      margin-bottom: 8px;
+    }
+  }
+
+  .danger-message {
+    color: #c62828;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+
+    strong {
+      font-size: 18px;
+      display: block;
+      margin-bottom: 8px;
+    }
+  }
+
+  .alergenos-peligro {
+    margin: 16px 0;
+    padding: 12px;
+    background: #fff;
+    border-radius: 8px;
+    border: 2px solid #f04141;
+
+    ion-chip {
+      margin: 4px;
+      --background: #f04141;
+      --color: white;
+      font-weight: bold;
+      font-size: 14px;
+      padding: 8px 12px;
+
+      ion-icon {
+        margin-right: 4px;
+      }
+    }
+  }
+
+  .info-adicional {
+    margin-top: 16px;
+    padding: 12px;
+    background: #f0f9ff;
+    border-radius: 8px;
+    border-left: 4px solid #3880ff;
+    font-size: 13px;
+    color: #444;
+
+    ion-icon {
+      vertical-align: middle;
+      margin-right: 4px;
+      color: #3880ff;
+    }
+
+    a {
+      color: #3880ff;
+      text-decoration: underline;
+      font-weight: 600;
+    }
+  }
+}
+
+/* Animaciones de pulso */
+@keyframes pulseGreen {
+  0%, 100% {
+    box-shadow: 0 6px 20px rgba(16, 220, 96, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 30px rgba(16, 220, 96, 0.5);
+  }
+}
+
+@keyframes pulseRed {
+  0%, 100% {
+    box-shadow: 0 6px 20px rgba(240, 65, 65, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 30px rgba(240, 65, 65, 0.5);
+  }
+}

@@ -11,6 +11,8 @@ import { Router, RouterModule } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
 import { OcrService } from '../../services/ocr.service';
+import { AlergiaService } from '../../services/alergia.service';
+import { AuthService } from '../../services/auth.service';
 
 type AnyImageCapture = any;
 
@@ -50,19 +52,43 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
   ocrText = '';
   ingredientes: string[] = [];
   alergenos: string[] = [];
+  
+  // NUEVO: Variables para verificación con BD
+  alergiasUsuario: string[] = [];
+  puedeConsumir: boolean | null = null;
+  alergenosEncontrados: string[] = [];
+  verificando = false;
 
   readonly isWeb = Capacitor.getPlatform() === 'web';
   readonly isNative = Capacitor.isNativePlatform();
 
-  constructor(private ocr: OcrService, private router: Router) {}
+  constructor(
+    private ocr: OcrService, 
+    private router: Router,
+    private alergiaService: AlergiaService,
+    private authService: AuthService
+  ) {}
 
   async ngAfterViewInit() {
     if (this.isWeb) await this.openWebcam();
+    // Cargar alergias del usuario al iniciar
+    await this.cargarAlergiasUsuario();
   }
 
   ngOnDestroy() {
     this.stopWebcam();
     this.ocr.terminate();
+  }
+
+  // NUEVO: Cargar alergias del usuario desde la BD
+  async cargarAlergiasUsuario() {
+    try {
+      const alergias = await this.alergiaService.obtenerAlergiasUsuario();
+      this.alergiasUsuario = alergias.map(a => a.nombre.toLowerCase());
+      console.log(' Alergias del usuario cargadas:', this.alergiasUsuario);
+    } catch (error) {
+      console.error('Error cargando alergias:', error);
+    }
   }
 
   // ===== Nativo (Android/iOS) =====
@@ -90,7 +116,7 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     await this.ensurePerms();
     const photo = await Camera.getPhoto({
       source: CameraSource.Camera,
-      resultType: CameraResultType.Uri, // ← resolución completa
+      resultType: CameraResultType.Uri,
       quality: 100,
       allowEditing: false,
       correctOrientation: true,
@@ -104,7 +130,7 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     await this.ensurePerms();
     const photo = await Camera.getPhoto({
       source: CameraSource.Photos,
-      resultType: CameraResultType.Uri, // ← mantiene tamaño original
+      resultType: CameraResultType.Uri,
       quality: 100,
       allowEditing: false,
       correctOrientation: true,
@@ -244,22 +270,94 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     reader.readAsDataURL(file);
   }
 
-  // ===== OCR + parsing =====
+  // ===== OCR + parsing + VERIFICACIÓN CON BD =====
   private async runOcrAndParse() {
     if (!this.photoDataUrl) return;
-    this.scanning = true; this.ocrDone = false;
+    this.scanning = true; 
+    this.ocrDone = false;
+    this.puedeConsumir = null;
+    this.alergenosEncontrados = [];
+    
     try {
       this.rawText = await this.ocr.recognize(this.photoDataUrl);
       const { cleanedText, ingredientes, alergenos } = this.processLabel(this.rawText);
       this.ocrText = cleanedText;
       this.ingredientes = this.postProcessIngredientes(ingredientes);
       this.alergenos = alergenos;
+      
+      // NUEVO: Verificar con las alergias del usuario
+      await this.verificarContraAlergias();
+      
     } catch (e) {
       console.error('[OCR] error:', e);
-      this.ocrText = ''; this.ingredientes = []; this.alergenos = [];
+      this.ocrText = ''; 
+      this.ingredientes = []; 
+      this.alergenos = [];
       this.errorMsg = 'No se pudo reconocer texto. Intenta con más luz/enfoque.';
     } finally {
-      this.scanning = false; this.ocrDone = true;
+      this.scanning = false; 
+      this.ocrDone = true;
+    }
+  }
+
+  // NUEVO: Verificar ingredientes contra alergias del usuario en BD
+  private async verificarContraAlergias() {
+    if (!this.authService.isAuthenticated()) {
+      console.warn('Usuario no autenticado');
+      return;
+    }
+
+    this.verificando = true;
+
+    try {
+      // Recargar alergias por si cambiaron
+      await this.cargarAlergiasUsuario();
+
+      if (this.alergiasUsuario.length === 0) {
+        this.puedeConsumir = true;
+        this.verificando = false;
+        return;
+      }
+
+      // Buscar coincidencias entre ingredientes detectados y alergias del usuario
+      const ingredientesLower = this.ingredientes.map(i => i.toLowerCase());
+      const alergenosDetectadosLower = this.alergenos.map(a => a.toLowerCase());
+
+      this.alergenosEncontrados = [];
+
+      // Verificar cada alergia del usuario
+      for (const alergia of this.alergiasUsuario) {
+        // Buscar en ingredientes
+        const coincideIngrediente = ingredientesLower.some(ing => 
+          ing.includes(alergia) || alergia.includes(ing)
+        );
+
+        // Buscar en alérgenos detectados
+        const coincideAlergeno = alergenosDetectadosLower.some(al => 
+          al.toLowerCase().includes(alergia) || alergia.includes(al.toLowerCase())
+        );
+
+        if (coincideIngrediente || coincideAlergeno) {
+          // Capitalizar para mostrar
+          this.alergenosEncontrados.push(
+            alergia.charAt(0).toUpperCase() + alergia.slice(1)
+          );
+        }
+      }
+
+      // Determinar si puede consumir
+      this.puedeConsumir = this.alergenosEncontrados.length === 0;
+
+      console.log('🔍 Verificación completada:', {
+        alergiasUsuario: this.alergiasUsuario,
+        alergenosEncontrados: this.alergenosEncontrados,
+        puedeConsumir: this.puedeConsumir
+      });
+
+    } catch (error) {
+      console.error('Error verificando alergias:', error);
+    } finally {
+      this.verificando = false;
     }
   }
 
@@ -312,7 +410,6 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     );
   }
 
-  /** Limpia, corrige OCR común, deduplica y ordena A→Z */
   private postProcessIngredientes(list: string[]): string[] {
     const cleaned = list
       .map(s => this.normalizeIng(s))
@@ -336,11 +433,8 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
       .trim();
   }
 
-  /** Correcciones OCR típicas (muy conservador) */
   private fixCommonOCR(s: string): string {
-    return s
-      .replace(/\bina de trigo\b/i, 'harina de trigo') // “Ina de Trigo” → “Harina de trigo”
-      ;
+    return s.replace(/\bina de trigo\b/i, 'harina de trigo');
   }
 
   private titleCaseEs(s: string): string {

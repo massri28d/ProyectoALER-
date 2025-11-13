@@ -66,9 +66,7 @@ export class RegistroPage {
     }
 
     // Contraseña (mínimo 8 caracteres, al menos una mayúscula, una minúscula, un número y un símbolo)
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(this.password)) {
-      return this.showToast('Contraseña insegura. Debe tener al menos 8 caracteres, incluyendo mayúscula, minúscula, número y símbolo.');
-    }
+    if (this.password.length < 6) return this.showToast('Mínimo 6 caracteres en contraseña');
 
     this.isLoading = true;
 
