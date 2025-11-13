@@ -41,9 +41,34 @@ export class RegistroPage {
     if (!this.email || !this.rut || !this.nombre || !this.telefono || !this.genero || !this.password) {
       return this.showToast('Completa todos los campos');
     }
-    if (!/^\S+@\S+\.\S+$/.test(this.email)) return this.showToast('Email inválido');
-    if (!/^\d{8,15}$/.test(this.telefono)) return this.showToast('Teléfono inválido (solo números)');
-    if (this.password.length < 6) return this.showToast('Mínimo 6 caracteres en contraseña');
+
+    // Validación de correo
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(this.email)) {
+      return this.showToast('Correo electrónico inválido');
+    }
+
+    // Validación de RUT (sin puntos ni guion)
+    const rutLimpio = this.rut.toUpperCase().trim();
+
+    // Verifica que el formato sea correcto antes de validar el dígito
+    if (!/^[0-9]{7,8}[0-9K]$/.test(rutLimpio)) {
+      return this.showToast('Formato de RUT inválido. Debe tener 8 o 9 caracteres, sin puntos ni guion.');
+    }
+
+    // Valida el dígito verificador
+    if (!this.validarRut(rutLimpio)) {
+      return this.showToast('RUT inválido. Verifique el dígito verificador.');
+    }
+
+    // Teléfono (solo números, debe comenzar con 9 o +56 si es chileno)
+    if (!/^(\+?56)?(9\d{8})$/.test(this.telefono)) {
+      return this.showToast('Teléfono inválido. Use formato 9XXXXXXXX o +569XXXXXXXX');
+    }
+
+    // Contraseña (mínimo 8 caracteres, al menos una mayúscula, una minúscula, un número y un símbolo)
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(this.password)) {
+      return this.showToast('Contraseña insegura. Debe tener al menos 8 caracteres, incluyendo mayúscula, minúscula, número y símbolo.');
+    }
 
     this.isLoading = true;
 
@@ -59,7 +84,7 @@ export class RegistroPage {
       });
 
       if (success) {
-        await this.showToast('¡Registrado correctamente! Inicia sesión');
+        await this.showToast('Registrado correctamente. Inicia sesión');
         this.router.navigate(['/login']);
       } else {
         this.showToast('El email ya está registrado o error en el registro');
@@ -74,6 +99,34 @@ export class RegistroPage {
 
   volverLogin() {
     this.router.navigate(['/login']);
+  }
+
+  /**
+   * Valida un RUT chileno sin puntos ni guion
+   * Ejemplo: 123456785 o 12345678K
+   */
+  private validarRut(rut: string): boolean {
+    rut = rut.toUpperCase().trim();
+
+    if (!/^[0-9]+[0-9K]$/.test(rut)) {
+      return false;
+    }
+
+    const cuerpo = rut.slice(0, -1);
+    const dv = rut.slice(-1);
+
+    let suma = 0;
+    let multiplo = 2;
+
+    for (let i = cuerpo.length - 1; i >= 0; i--) {
+      suma += +cuerpo[i] * multiplo;
+      multiplo = multiplo < 7 ? multiplo + 1 : 2;
+    }
+
+    const resto = 11 - (suma % 11);
+    const dvEsperado = resto === 11 ? '0' : resto === 10 ? 'K' : String(resto);
+
+    return dv === dvEsperado;
   }
 
   private async showToast(message: string) {
