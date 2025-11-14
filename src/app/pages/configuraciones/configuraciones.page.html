@@ -12,9 +12,38 @@
   </ion-header>
 
   <div class="welcome-container">
+    <ion-card class="profile-card">
+      <ion-card-header>
+        <ion-card-title>Mi perfil</ion-card-title>
+        <ion-card-subtitle>Información del usuario</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="field">
+          <span class="label">RUT</span>
+          <span class="value">{{ user.rut || '-' }}</span>
+        </div>
+        <div class="field">
+          <span class="label">Correo</span>
+          <span class="value">{{ user.correo || '-' }}</span>
+        </div>
+        <div class="field">
+          <span class="label">Fecha de nacimiento</span>
+          <span class="value">{{ user.fechaNacimiento || '-' }}</span>
+        </div>
+        <div class="field">
+          <span class="label">Teléfono</span>
+          <span class="value">{{ user.telefono || '-' }}</span>
+        </div>
+        <div class="field">
+          <span class="label">Género</span>
+          <span class="value">{{ user.genero || '-' }}</span>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
     <ion-button expand="block" shape="round" color="primary" routerLink="/inicio">
       <ion-icon name="information-circle-outline" slot="start"></ion-icon>
-    inicio
+      inicio
     </ion-button>
   </div>
 

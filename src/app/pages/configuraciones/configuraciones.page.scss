@@ -4,7 +4,6 @@
 
   ion-content {
     --background: #F0FDFA;  // Fondo de la página
-    color: white;           // Color del texto
   }
 }
 
@@ -33,4 +32,68 @@
       margin-bottom: 1rem;
       animation: fadeIn 1.5s ease-in-out;
     }
+    
+    .profile-card {
+      width: 100%;
+      max-width: 720px;
+      margin-bottom: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .field {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      align-items: center;
+    }
+
+    .label {
+      font-weight: 600;
+      color: #2b2b2b;
+    }
+
+    .value {
+      color: #1f2933;
+      text-align: right;
+      max-width: 60%;
+      word-break: break-word;
+    }
+    
+    /* Header verde y contenido blanco */
+    .profile-card ion-card-header {
+      background: var(--ion-color-primary, #2ea86b);
+      color: #ffffff;
+      text-align: center;
+      padding: 1.25rem 1rem;
+    }
+
+    .profile-card ion-card-title {
+      color: #ffffff;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+
+    .profile-card ion-card-subtitle {
+      color: rgba(255,255,255,0.95);
+      font-size: 0.9rem;
+    }
+
+    .profile-card ion-card-content {
+      background: #ffffff;
+      color: #222;
+      padding: 1rem 1.25rem 1.5rem 1.25rem;
+    }
+
+    /* Ajuste del botón para mantener paleta */
+    ion-button[shape="round"] {
+      max-width: 320px;
+      background: var(--ion-color-primary, #2ea86b);
+      color: #fff;
+      --box-shadow: 0 6px 18px rgba(46,168,107,0.18);
+    }
+    
     }
