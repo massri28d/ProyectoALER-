@@ -30,13 +30,34 @@
           <span class="label">Fecha de nacimiento</span>
           <span class="value">{{ user.fechaNacimiento || '-' }}</span>
         </div>
+
+        <!-- Campos editables: nombre, telefono, genero -->
+        <div class="field">
+          <span class="label">Nombre</span>
+          <span class="value" *ngIf="!editMode">{{ user.nombre || '-' }}</span>
+          <ion-input *ngIf="editMode" [(ngModel)]="form.nombre" placeholder="Nombre"></ion-input>
+        </div>
+
         <div class="field">
           <span class="label">Teléfono</span>
-          <span class="value">{{ user.telefono || '-' }}</span>
+          <span class="value" *ngIf="!editMode">{{ user.telefono || '-' }}</span>
+          <ion-input *ngIf="editMode" [(ngModel)]="form.telefono" placeholder="Teléfono"></ion-input>
         </div>
+
         <div class="field">
           <span class="label">Género</span>
-          <span class="value">{{ user.genero || '-' }}</span>
+          <span class="value" *ngIf="!editMode">{{ user.genero || '-' }}</span>
+          <ion-select *ngIf="editMode" [(ngModel)]="form.genero" interface="popover">
+            <ion-select-option value="Femenino">Femenino</ion-select-option>
+            <ion-select-option value="Masculino">Masculino</ion-select-option>
+            <ion-select-option value="Otro">Otro</ion-select-option>
+          </ion-select>
+        </div>
+
+        <div class="actions" style="margin-top:1rem; display:flex; gap:0.5rem; justify-content:center;">
+          <ion-button *ngIf="!editMode" (click)="onEdit()" color="medium">Editar</ion-button>
+          <ion-button *ngIf="editMode" (click)="onSave()" color="primary" [disabled]="isSaving">Guardar</ion-button>
+          <ion-button *ngIf="editMode" (click)="onCancel()" color="light" [disabled]="isSaving">Cancelar</ion-button>
         </div>
       </ion-card-content>
     </ion-card>

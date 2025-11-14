@@ -139,6 +139,23 @@ export class ApiService {
       );
   }
 
+  /**
+   * Actualizar perfil del usuario (cliente)
+   * Se espera que el backend exponga un endpoint tipo `usuarios/actualizar.php`
+   */
+  actualizarPerfil(payload: { id: number; nombre?: string; telefono?: string; genero?: string }): Observable<any> {
+    return this.http.post<ApiResponse>(`${this.API_URL}/usuarios/actualizar.php`, payload, this.httpOptions)
+      .pipe(
+        map(response => {
+          if (response.success) {
+            return response;
+          }
+          throw new Error(response.error || 'Error al actualizar perfil');
+        }),
+        catchError(this.handleError)
+      );
+  }
+
   // ==================== MANEJO DE ERRORES ====================
 
   private handleError(error: HttpErrorResponse) {

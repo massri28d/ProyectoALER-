@@ -129,6 +129,19 @@ export class AuthService {
   }
 
   /**
+   * Actualiza el usuario en sesión (sessionStorage + BehaviorSubject).
+   * Útil para sincronizar cambios locales después de editar el perfil.
+   */
+  setCurrentUser(user: Usuario) {
+    try {
+      sessionStorage.setItem('currentUser', JSON.stringify(user));
+      this.currentUserSubject.next(user);
+    } catch (e) {
+      console.error('Error guardando usuario en sesión', e);
+    }
+  }
+
+  /**
    * Verifica si el usuario está autenticado
    */
   isAuthenticated(): boolean {
