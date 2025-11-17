@@ -67,7 +67,7 @@ export class AuthService {
         sessionStorage.setItem('currentUser', JSON.stringify(userData));
         this.currentUserSubject.next(userData);
 
-        console.log('✅ Login exitoso:', userData.nombre);
+        console.log(' Login exitoso:', userData.nombre);
         return true;
       }
 
@@ -101,7 +101,7 @@ export class AuthService {
       const response = await lastValueFrom(this.apiService.registrar(datosRegistro));
 
       if (response.success) {
-        console.log('✅ Usuario registrado correctamente');
+        console.log(' Usuario registrado correctamente');
         return true;
       }
 
@@ -118,7 +118,7 @@ export class AuthService {
   logout() {
     sessionStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
-    console.log('✅ Sesión cerrada');
+    console.log(' Sesión cerrada');
   }
 
   /**

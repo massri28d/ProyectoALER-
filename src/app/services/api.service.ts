@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, from } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { environment } from 'src/environments/environment';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -19,7 +20,7 @@ export interface ApiResponse<T = any> {
 })
 export class ApiService {
   // IMPORTANTE: Cambia esta URL según tu configuración
-  private readonly API_URL = 'http://localhost/ProyectoALER/api';
+  private readonly API_URL = environment.apiUrl;
 
   private httpOptions = {
     headers: new HttpHeaders({
