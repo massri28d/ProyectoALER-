@@ -20,6 +20,7 @@ export interface ApiResponse<T = any> {
 })
 export class ApiService {
   // IMPORTANTE: Cambia esta URL según tu configuración
+  // Esta dentro de enviroments en caso de querer cambiarlo
   private readonly API_URL = environment.apiUrl;
 
   private httpOptions = {
