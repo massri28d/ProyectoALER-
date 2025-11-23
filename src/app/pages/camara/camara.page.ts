@@ -53,7 +53,7 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
   ingredientes: string[] = [];
   alergenos: string[] = [];
   
-  // NUEVO: Variables para verificación con BD
+  // Variables para verificación con BD
   alergiasUsuario: string[] = [];
   puedeConsumir: boolean | null = null;
   alergenosEncontrados: string[] = [];
@@ -80,12 +80,12 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     this.ocr.terminate();
   }
 
-  // NUEVO: Cargar alergias del usuario desde la BD
+  // Cargar alergias del usuario desde la BD
   async cargarAlergiasUsuario() {
     try {
       const alergias = await this.alergiaService.obtenerAlergiasUsuario();
       this.alergiasUsuario = alergias.map(a => a.nombre.toLowerCase());
-      console.log(' Alergias del usuario cargadas:', this.alergiasUsuario);
+      console.log('Alergias del usuario cargadas:', this.alergiasUsuario);
     } catch (error) {
       console.error('Error cargando alergias:', error);
     }
@@ -283,9 +283,11 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
       const { cleanedText, ingredientes, alergenos } = this.processLabel(this.rawText);
       this.ocrText = cleanedText;
       this.ingredientes = this.postProcessIngredientes(ingredientes);
-      this.alergenos = alergenos;
       
-      // NUEVO: Verificar con las alergias del usuario
+      // Detectar alérgenos en el texto COMPLETO, no solo en el bloque de ingredientes
+      this.alergenos = this.detectAlergenos(this.rawText.toLowerCase());
+      
+      // Verificar contra alergias del usuario
       await this.verificarContraAlergias();
       
     } catch (e) {
@@ -300,7 +302,7 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     }
   }
 
-  // NUEVO: Verificar ingredientes contra alergias del usuario en BD
+  // Verificar ingredientes contra alergias del usuario en BD
   private async verificarContraAlergias() {
     if (!this.authService.isAuthenticated()) {
       console.warn('Usuario no autenticado');
@@ -319,7 +321,8 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
         return;
       }
 
-      // Buscar coincidencias entre ingredientes detectados y alergias del usuario
+      // Buscar también en el texto OCR completo (no solo en ingredientes procesados)
+      const textoCompletoLower = this.ocrText.toLowerCase();
       const ingredientesLower = this.ingredientes.map(i => i.toLowerCase());
       const alergenosDetectadosLower = this.alergenos.map(a => a.toLowerCase());
 
@@ -327,17 +330,30 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
 
       // Verificar cada alergia del usuario
       for (const alergia of this.alergiasUsuario) {
-        // Buscar en ingredientes
+        let encontrado = false;
+
+        // 1. Buscar en ingredientes detectados
         const coincideIngrediente = ingredientesLower.some(ing => 
           ing.includes(alergia) || alergia.includes(ing)
         );
 
-        // Buscar en alérgenos detectados
+        // 2. Buscar en alérgenos detectados por el método detectAlergenos
         const coincideAlergeno = alergenosDetectadosLower.some(al => 
           al.toLowerCase().includes(alergia) || alergia.includes(al.toLowerCase())
         );
 
-        if (coincideIngrediente || coincideAlergeno) {
+        // 3. Buscar en el texto completo con variantes comunes
+        const variantes = this.obtenerVariantesAlergia(alergia);
+        const coincideTextoCompleto = variantes.some(variante => 
+          textoCompletoLower.includes(variante)
+        );
+
+        // 4. Buscar advertencias de contaminación cruzada
+        const tieneAdvertencia = this.buscarAdvertenciaContaminacion(textoCompletoLower, alergia);
+
+        encontrado = coincideIngrediente || coincideAlergeno || coincideTextoCompleto || tieneAdvertencia;
+
+        if (encontrado) {
           // Capitalizar para mostrar
           this.alergenosEncontrados.push(
             alergia.charAt(0).toUpperCase() + alergia.slice(1)
@@ -348,7 +364,7 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
       // Determinar si puede consumir
       this.puedeConsumir = this.alergenosEncontrados.length === 0;
 
-      console.log('🔍 Verificación completada:', {
+      console.log('Verificacion completada:', {
         alergiasUsuario: this.alergiasUsuario,
         alergenosEncontrados: this.alergenosEncontrados,
         puedeConsumir: this.puedeConsumir
@@ -359,6 +375,66 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
     } finally {
       this.verificando = false;
     }
+  }
+
+  // Método para obtener variantes de nombres de alergias
+  private obtenerVariantesAlergia(alergia: string): string[] {
+    const variantes: { [key: string]: string[] } = {
+      'soya': ['soya', 'soja', 'soy'],
+      'soja': ['soya', 'soja', 'soy'],
+      'maní': ['maní', 'mani', 'cacahuete', 'cacahuate', 'peanut'],
+      'mani': ['maní', 'mani', 'cacahuete', 'cacahuate', 'peanut'],
+      'lácteos': ['lácteos', 'lacteos', 'leche', 'lactosa', 'caseína', 'casein', 'dairy'],
+      'lacteos': ['lácteos', 'lacteos', 'leche', 'lactosa', 'caseína', 'casein', 'dairy'],
+      'leche': ['leche', 'lactosa', 'caseína', 'casein', 'lácteo', 'lacteo', 'milk', 'dairy'],
+      'gluten': ['gluten', 'trigo', 'wheat', 'cebada', 'centeno', 'avena'],
+      'huevo': ['huevo', 'egg', 'albúmina', 'albumina', 'ovoalbumina'],
+      'pescado': ['pescado', 'fish', 'atún', 'atun', 'salmon', 'salmón', 'merluza'],
+      'mariscos': ['mariscos', 'camarón', 'camaron', 'langosta', 'cangrejo', 'shellfish', 'crustaceos', 'crustáceos'],
+      'frutos secos': ['nueces', 'almendras', 'avellanas', 'pistachos', 'anacardo', 'cashew', 'nuts'],
+      'sésamo': ['sésamo', 'sesamo', 'ajonjolí', 'ajonjoli', 'sesame'],
+      'sesamo': ['sésamo', 'sesamo', 'ajonjolí', 'ajonjoli', 'sesame'],
+      'mostaza': ['mostaza', 'mustard'],
+      'apio': ['apio', 'celery'],
+      'legumbres': ['legumbres', 'guisantes', 'habas', 'lentejas', 'garbanzos'],
+      'conservantes': ['conservantes', 'benzoatos', 'nitritos', 'preservatives'],
+      'aditivos': ['aditivos', 'potenciadores', 'sabor', 'glutamato', 'msg'],
+      'colorantes': ['colorantes', 'tartrazina', 'rojo 40', 'colorant'],
+      'sulfitos': ['sulfitos', 'sulfito', 'dioxido de azufre', 'dióxido de azufre', 'so2']
+    };
+
+    const alergiaLower = alergia.toLowerCase();
+    
+    // Buscar variantes específicas
+    for (const [key, valores] of Object.entries(variantes)) {
+      if (alergiaLower.includes(key) || key.includes(alergiaLower)) {
+        return valores;
+      }
+    }
+
+    // Si no hay variantes específicas, retornar la alergia original
+    return [alergiaLower];
+  }
+
+  // Método para detectar advertencias de contaminación cruzada
+  private buscarAdvertenciaContaminacion(textoLower: string, alergia: string): boolean {
+    const variantes = this.obtenerVariantesAlergia(alergia);
+    
+    // Crear patrón con variantes
+    const variantesPattern = variantes.join('|');
+    
+    // Patrones comunes de advertencia
+    const patronesAdvertencia = [
+      new RegExp(`elaborado en (?:líneas|lineas|instalaciones|plantas?) (?:que |donde )?(?:también |tambien |también|tambien)?(?:se )?(?:procesan?|fabrican?|elaboran?|manipulan?).{0,100}(${variantesPattern})`, 'i'),
+      new RegExp(`puede contener.{0,50}(${variantesPattern})`, 'i'),
+      new RegExp(`(?:trazas|vestigios) de.{0,30}(${variantesPattern})`, 'i'),
+      new RegExp(`contiene.{0,50}(${variantesPattern})`, 'i'),
+      new RegExp(`(?:no apto|prohibido) para (?:personas con |alérgicos|alergicos a ).{0,30}(${variantesPattern})`, 'i'),
+      new RegExp(`procesado en.{0,50}(${variantesPattern})`, 'i'),
+      new RegExp(`compartido con.{0,50}(${variantesPattern})`, 'i')
+    ];
+
+    return patronesAdvertencia.some(patron => patron.test(textoLower));
   }
 
   private processLabel(input: string) {
@@ -377,7 +453,7 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
       const startIdx = startMatch.index + startMatch[0].length;
       const after = txt.slice(startIdx);
       const corteRe =
-        /(informaci[oó]n|tabla|nutric|contenido (neto)?|contiene\b|al[ée]rgen|puede contener|conservar|lote|fecha|venc|fabricad|elaborad|origen|modo de|advert|preparaci[oó]n|presentaci[oó]n|calor[ií]as|porci[oó]n)/i;
+        /(informaci[oó]n|tabla|nutric|contenido (neto)?|calor[ií]as|porci[oó]n)/i;
       const m = corteRe.exec(after);
       bloque = (m ? after.slice(0, m.index) : after).trim();
     } else {
@@ -448,18 +524,20 @@ export class CamaraPage implements AfterViewInit, OnDestroy {
   private detectAlergenos(textLower: string): string[] {
     const has = (re: RegExp) => re.test(textLower);
     const f: string[] = [];
-    if (has(/\bgluten|trigo|cebada|centeno|avena\b/)) f.push('Gluten');
-    if (has(/\bleche|lactosa|suero de leche|casein[aeo]?|lactosuero\b/)) f.push('Leche');
-    if (has(/\bhuevo|al[bv]úmina|ov[oó]albúmina\b/)) f.push('Huevo');
-    if (has(/\bsoja|soya\b/)) f.push('Soya');
-    if (has(/\bman[ií]|cacahuate|peanut\b/)) f.push('Maní');
-    if (has(/\balmendra|nuez(?! moscada)|avellana|pistacho|anacardo|cashew|pecana|macadamia\b/)) f.push('Frutos secos');
-    if (has(/\bpescado|at[uú]n|salm[oó]n|merluza|jurel\b/)) f.push('Pescado');
-    if (has(/\bcamar[oó]n|langost|cangrejo|jaiba|ostri|ost[ií]on|mejill[oó]n|almeja|calamar|pulpo\b/)) f.push('Crustáceos/Moluscos');
-    if (has(/\bs[eé]samo|ajonjol[ií]\b/)) f.push('Sésamo');
-    if (has(/\bapio\b/)) f.push('Apio');
-    if (has(/\bmostaza\b/)) f.push('Mostaza');
-    if (has(/\bsulfit|d[ií]oxido de azufre\b|\bso2\b/)) f.push('Sulfitos');
+    
+    if (has(/\b(gluten|trigo|cebada|centeno|avena|wheat)\b/)) f.push('Gluten');
+    if (has(/\b(leche|l[aá]cteo|lactosa|suero de leche|casein[aeo]?|lactosuero|milk|dairy)\b/)) f.push('Leche');
+    if (has(/\b(huevo|al[bv][úu]mina|ov[oó]alb[úu]mina|egg)\b/)) f.push('Huevo');
+    if (has(/\b(soja|soya|soy)\b/)) f.push('Soya');
+    if (has(/\b(man[ií]|cacahuate|cacahuete|peanut)\b/)) f.push('Maní');
+    if (has(/\b(almendra|nuez(?! moscada)|avellana|pistacho|anacardo|cashew|pecana|macadamia|nuts)\b/)) f.push('Frutos secos');
+    if (has(/\b(pescado|at[uú]n|salm[oó]n|merluza|jurel|fish)\b/)) f.push('Pescado');
+    if (has(/\b(camar[oó]n|langost|cangrejo|jaiba|ostri|ost[ií]on|mejill[oó]n|almeja|calamar|pulpo|shrimp|shellfish)\b/)) f.push('Crustáceos/Moluscos');
+    if (has(/\b(s[eé]samo|ajonjol[ií]|sesame)\b/)) f.push('Sésamo');
+    if (has(/\b(apio|celery)\b/)) f.push('Apio');
+    if (has(/\b(mostaza|mustard)\b/)) f.push('Mostaza');
+    if (has(/\b(sulfit|d[ií]oxido de azufre)\b|\bso2\b/)) f.push('Sulfitos');
+    
     return [...new Set(f)];
   }
 
