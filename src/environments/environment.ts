@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'http://192.168.1.9/ProyectoALER/api'  // IP de tu PC en la red local
+  apiUrl: 'http://172.21.39.6/ProyectoALER/api'  // IP de tu PC en la red local
 };
 
 

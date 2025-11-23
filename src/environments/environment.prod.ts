@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://192.168.1.9/ProyectoALER/api'
+  apiUrl: 'http://172.21.39.6/ProyectoALER/api'
 };
