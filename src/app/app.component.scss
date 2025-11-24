@@ -29,17 +29,13 @@ ion-menu.md ion-list#inbox-list {
 ion-menu.md ion-list#inbox-list ion-list-header {
   font-size: 22px;
   font-weight: 600;
-
   min-height: 20px;
 }
 
 ion-menu.md ion-list#labels-list ion-list-header {
   font-size: 16px;
-
   margin-bottom: 18px;
-
   color: #757575;
-
   min-height: 26px;
 }
 
@@ -63,6 +59,24 @@ ion-menu.md ion-item ion-icon {
 
 ion-menu.md ion-item ion-label {
   font-weight: 500;
+}
+
+// Estilos para items de admin
+ion-menu.md ion-item.admin-item {
+  --background: rgba(220, 53, 69, 0.08);
+
+  ion-icon {
+    color: #dc3545;
+  }
+
+  ion-label {
+    color: #dc3545;
+    font-weight: 600;
+  }
+
+  &.selected {
+    --background: rgba(220, 53, 69, 0.2);
+  }
 }
 
 ion-menu.ios ion-content {
@@ -93,6 +107,28 @@ ion-menu.ios ion-item ion-icon {
   color: #73849a;
 }
 
+// Estilos para items de admin en iOS
+ion-menu.ios ion-item.admin-item {
+  --background: rgba(220, 53, 69, 0.08);
+
+  ion-icon {
+    color: #dc3545;
+  }
+
+  ion-label {
+    color: #dc3545;
+    font-weight: 600;
+  }
+
+  &.selected {
+    --background: rgba(220, 53, 69, 0.2);
+
+    ion-icon {
+      color: #dc3545;
+    }
+  }
+}
+
 ion-menu.ios ion-list#labels-list ion-list-header {
   margin-bottom: 8px;
 }
@@ -110,10 +146,56 @@ ion-menu.ios ion-note {
 ion-note {
   display: inline-block;
   font-size: 16px;
-
   color: var(--ion-color-medium-shade);
 }
 
 ion-item.selected {
   --color: var(--ion-color-primary);
+}
+
+// Sección de usuario
+#user-section {
+  ion-item {
+    --min-height: auto;
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+  }
+
+  ion-label {
+    h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+      color: #0F172A;
+    }
+
+    p {
+      font-size: 12px;
+      color: #666;
+      margin: 0 0 6px 0;
+    }
+
+    ion-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 12px;
+
+      ion-icon {
+        font-size: 12px;
+      }
+    }
+  }
+
+  ion-button {
+    margin: 12px 0 0 0;
+    --box-shadow: 0 4px 8px rgba(240, 65, 65, 0.2);
+    transition: transform 0.2s ease;
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
 }

@@ -13,14 +13,18 @@
                 [routerLink]="[p.url]"
                 lines="none"
                 detail="false"
-                routerLinkActive="selected">
+                routerLinkActive="selected"
+                [class.admin-item]="p.admin">
                 <ion-icon
                   aria-hidden="true"
                   slot="start"
                   [ios]="p.icon + '-outline'"
                   [md]="p.icon + '-sharp'">
                 </ion-icon>
-                <ion-label>{{ p.title }}</ion-label>
+                <ion-label>
+                  {{ p.title }}
+                  <ion-badge *ngIf="p.admin" color="danger" slot="end">Admin</ion-badge>
+                </ion-label>
               </ion-item>
             </ion-menu-toggle>
           }
@@ -44,6 +48,10 @@
             <ion-label>
               <h2>{{ getCurrentUser()?.nombre }}</h2>
               <p>{{ getCurrentUser()?.email }}</p>
+              <ion-badge *ngIf="isAdmin()" color="success" style="margin-top: 4px;">
+                <ion-icon name="shield-outline" slot="start"></ion-icon>
+                Administrador
+              </ion-badge>
             </ion-label>
           </ion-item>
 

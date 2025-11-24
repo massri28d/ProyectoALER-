@@ -1,6 +1,6 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="ion-text-center">
   <ion-toolbar color="primary">
-    <ion-title>¿Quienes somos?</ion-title>
+    <ion-title>¿Quiénes Somos?</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -11,26 +11,82 @@
     </ion-toolbar>
   </ion-header>
 
-  <div class="welcome-container">
-    <ion-button expand="block" shape="round" color="primary" routerLink="/inicio">
-      <ion-icon name="information-circle-outline" slot="start"></ion-icon>
-    inicio
+  <!-- Sección Misión -->
+  <ion-card class="content-card">
+    <ion-card-header class="card-header-green">
+      <ion-card-title>Nuestra Misión</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>
+        Somos un equipo dedicado a facilitar la identificación de ingredientes alimenticios mediante tecnologías modernas. Buscamos apoyar a personas con alergias, restricciones dietéticas o interesadas en conocer qué consumen.
+      </p>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Qué Hacemos -->
+  <ion-card class="content-card">
+    <ion-card-header class="card-header-green">
+      <ion-card-title>¿Qué Hacemos?</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>
+        Nuestra aplicación detecta ingredientes a partir de imágenes, haciendo el proceso más rápido, accesible y práctico. Promovemos la salud, la inclusión y la innovación tecnológica.
+      </p>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Valores -->
+  <ion-card class="content-card">
+    <ion-card-header class="card-header-green">
+      <ion-card-title>Nuestros Valores</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div class="values-list">
+        <div class="value-item">
+          <span class="value-label">Salud:  </span>
+          <span class="value-text">Priorizamos el bienestar de nuestros usuarios</span>
+        </div>
+        <div class="value-item">
+          <span class="value-label">Inclusión:  </span>
+          <span class="value-text">Acceso universal, sin limitaciones</span>
+        </div>
+        <div class="value-item">
+          <span class="value-label">Innovación:  </span>
+          <span class="value-text">Tecnología al servicio de las personas</span>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Características -->
+  <ion-card class="content-card">
+    <ion-card-header class="card-header-green">
+      <ion-card-title>Características Principales</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div class="features-list">
+        <div class="feature-item">
+          <h4>Escaneo Rápido</h4>
+          <p>Captura ingredientes en segundos</p>
+        </div>
+        <div class="feature-item">
+          <h4>Detección Segura</h4>
+          <p>Identifica alérgenos automáticamente</p>
+        </div>
+        <div class="feature-item">
+          <h4>Perfil Personal</h4>
+          <p>Configura tus alergias</p>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Navegación -->
+  <div class="nav-container">
+    <ion-button expand="block" shape="round" color="primary" routerLink="/inicio" class="nav-button">
+      <ion-icon name="home-outline" slot="start"></ion-icon>
+      VOLVER AL INICIO
     </ion-button>
   </div>
 
-  <div class="contenido">
-    <h2>Nuestra misión</h2>
-    <p>
-      Somos un equipo dedicado a facilitar la identificación de ingredientes alimenticios
-      a través de tecnologías modernas. Buscamos ayudar a personas con alergias, restricciones
-      dietéticas o simplemente interesadas en conocer qué consumen.
-    </p>
-
-    <h2>¿Qué hacemos?</h2>
-    <p>
-      Nuestra aplicación permite detectar ingredientes mediante imágenes, haciendo el proceso
-      más rápido, accesible y práctico. Estamos comprometidos con la salud, la inclusión y
-      la innovación tecnológica.
-    </p>
-  </div>
 </ion-content>

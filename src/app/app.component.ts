@@ -19,6 +19,7 @@ import {
   IonRouterOutlet,
   IonRouterLink,
   IonButton,
+  IonBadge,
   Platform
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -30,7 +31,8 @@ import {
   logInOutline, logInSharp,
   personCircleOutline, personCircleSharp,
   bookmarkOutline, bookmarkSharp,
-  logOutOutline, logOutSharp
+  logOutOutline, logOutSharp,
+  shieldOutline, shieldSharp
 } from 'ionicons/icons';
 import { CommonModule } from '@angular/common'; 
 
@@ -40,6 +42,13 @@ import { AuthService } from './services/auth.service';
 
 // Status bar (Capacitor)
 import { StatusBar, Style } from '@capacitor/status-bar';
+
+interface AppPage {
+  title: string;
+  url: string;
+  icon: string;
+  admin?: boolean; // Indicar si es solo para admins
+}
 
 @Component({
   selector: 'app-root',
@@ -63,19 +72,12 @@ import { StatusBar, Style } from '@capacitor/status-bar';
     IonLabel,
     IonRouterLink,
     IonRouterOutlet,
-    IonButton
+    IonButton,
+    IonBadge
   ]
 })
 export class AppComponent {
-  public appPages = [
-    { title: 'Inicio', url: '/inicio' },
-    { title: 'Detectar ingredientes', url: '/menuingredientes' },
-    { title: 'Configuraciones', url: '/configuraciones' },
-    { title: '¿ Quienes somos ?', url: '/quienessomos' },
-  ].map(page => ({
-    ...page,
-    icon: this.getIconForTitle(page.title)
-  }));
+  public appPages: AppPage[] = [];
 
   public labels: string[] = [];
 
@@ -93,14 +95,15 @@ export class AppComponent {
       logInOutline, logInSharp,
       personCircleOutline, personCircleSharp,
       bookmarkOutline, bookmarkSharp,
-      logOutOutline, logOutSharp
+      logOutOutline, logOutSharp,
+      shieldOutline, shieldSharp
     });
   }
 
   async ngOnInit() {
     await this.platform.ready();
 
-    // 1) Evita que la status bar tape el header
+    // 1) Configura la status bar
     try {
       await StatusBar.setOverlaysWebView({ overlay: false });
       await StatusBar.setStyle({ style: Style.Dark });
@@ -109,18 +112,38 @@ export class AppComponent {
       // en web/no soportado, simplemente ignora
     }
 
-    // 2) Inicializa SQLite y crea tablas (opcional por ahora)
-    // await this.dbService.initializePlugin();
+    // 2) Actualizar menú (incluyendo verificación de admin)
+    this.updateAppPages();
+
+    // 3) Suscribirse a cambios del usuario para actualizar menú en tiempo real
+    this.authService.currentUser$.subscribe(() => {
+      this.updateAppPages();
+    });
   }
 
-  getIconForTitle(title: string): string {
-    const lowerTitle = title.toLowerCase();
-    if (lowerTitle.includes('inicio') && !lowerTitle.includes('sesion')) return 'home';
-    if (lowerTitle.includes('ingrediente')) return 'restaurant';
-    if (lowerTitle.includes('config')) return 'settings';
-    if (lowerTitle.includes('quienes') || lowerTitle.includes('somos')) return 'people';
-    if (lowerTitle.includes('sesion')) return 'log-in';
-    return 'bookmark';
+  /**
+   * Actualiza las páginas del menú según el rol del usuario (admin o no)
+   */
+  private updateAppPages() {
+    const user = this.authService.getCurrentUser();
+    const isAdmin = user?.email?.toLowerCase().endsWith('@admin.cl') ?? false;
+
+    // Array base de páginas
+    const allPages: AppPage[] = [
+      { title: 'Inicio', url: '/inicio', icon: 'home', admin: false },
+      { title: 'Detectar ingredientes', url: '/menuingredientes', icon: 'restaurant', admin: false },
+      { title: 'Configuraciones', url: '/configuraciones', icon: 'settings', admin: false },
+      { title: '¿ Quienes somos ?', url: '/quienessomos', icon: 'people', admin: false },
+      { title: 'Usuarios (Admin)', url: '/usuarios', icon: 'shield', admin: true }
+    ];
+
+    // Filtrar según si es admin o no
+    this.appPages = allPages.filter(page => {
+      if (page.admin) {
+        return isAdmin; // Solo mostrar si es admin
+      }
+      return true; // Mostrar siempre si no es admin
+    });
   }
 
   /**
@@ -136,5 +159,13 @@ export class AppComponent {
    */
   getCurrentUser() {
     return this.authService.getCurrentUser();
+  }
+
+  /**
+   * Verifica si el usuario actual es administrador
+   */
+  isAdmin(): boolean {
+    const user = this.authService.getCurrentUser();
+    return user?.email?.toLowerCase().endsWith('@admin.cl') ?? false;
   }
 }

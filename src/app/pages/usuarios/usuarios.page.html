@@ -1,24 +1,119 @@
-<ion-header>
+<ion-header [translucent]="true" class="ion-text-center">
   <ion-toolbar color="primary">
-    <ion-title>Usuarios registrados</ion-title>
+    <ion-title>Gestión de Usuarios</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <ion-button expand="block" color="secondary" (click)="descargarDb()">Descargar base de datos</ion-button>
-  <div *ngIf="loading">Cargando usuarios...</div>
-  <ion-list *ngIf="!loading">
-    <ion-item *ngFor="let usuario of usuarios">
-      <ion-label>
-        <h2>{{ usuario.nombre }}</h2>
-        <p>Email: {{ usuario.email }}</p>
-        <p>Teléfono: {{ usuario.telefono }}</p>
-        <p>Género: {{ usuario.genero }}</p>
-        <p>Fecha de nacimiento: {{ usuario.fechaNacimiento }}</p>
-      </ion-label>
-    </ion-item>
-    <ion-item *ngIf="usuarios.length === 0">
-      <ion-label>No hay usuarios registrados.</ion-label>
-    </ion-item>
-  </ion-list>
+<ion-content [fullscreen]="true" class="usuarios-content">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Usuarios Registrados</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <!-- Sección de acciones -->
+  <div class="acciones-container">
+    <ion-button expand="block" color="secondary" (click)="recargar()">
+      <ion-icon name="refresh-outline" slot="start"></ion-icon>
+      Recargar
+    </ion-button>
+    <ion-button expand="block" color="tertiary" (click)="descargarDb()">
+      <ion-icon name="download-outline" slot="start"></ion-icon>
+      Descargar BD (JSON)
+    </ion-button>
+  </div>
+
+  <!-- Spinner de carga -->
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Cargando usuarios...</p>
+  </div>
+
+  <!-- Contenido principal -->
+  <div *ngIf="!loading">
+    <!-- Contador de usuarios -->
+    <ion-card class="stats-card">
+      <ion-card-header>
+        <ion-card-title>Estadísticas</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="stat-item">
+          <span class="stat-label">Total de usuarios:</span>
+          <span class="stat-value">{{ usuarios.length }}</span>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Lista de usuarios -->
+    <ion-card *ngIf="usuarios.length > 0" class="usuarios-card">
+      <ion-card-header>
+        <ion-card-title>Usuarios Registrados</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list>
+          <ion-item-divider sticky>
+            <ion-label>
+              <strong>{{ usuarios.length }} usuario(s)</strong>
+            </ion-label>
+          </ion-item-divider>
+
+          <ion-item *ngFor="let usuario of usuarios; let i = index" class="usuario-item">
+            <ion-label>
+              <div class="usuario-header">
+                <h2><strong>{{ i + 1 }}. {{ usuario.nombre }}</strong></h2>
+                <ion-badge color="primary">{{ usuario.email }}</ion-badge>
+              </div>
+              <div class="usuario-details">
+                <p *ngIf="usuario.email">
+                  <ion-icon name="mail-outline"></ion-icon>
+                  <strong>Email:</strong> {{ usuario.email }}
+                </p>
+                <p *ngIf="usuario.rut">
+                  <ion-icon name="card-outline"></ion-icon>
+                  <strong>RUT:</strong> {{ usuario.rut }}
+                </p>
+                <p *ngIf="usuario.telefono">
+                  <ion-icon name="call-outline"></ion-icon>
+                  <strong>Teléfono:</strong> {{ usuario.telefono }}
+                </p>
+                <p *ngIf="usuario.genero">
+                  <ion-icon name="person-outline"></ion-icon>
+                  <strong>Género:</strong> {{ usuario.genero }}
+                </p>
+                <p *ngIf="usuario.fechaNacimiento">
+                  <ion-icon name="calendar-outline"></ion-icon>
+                  <strong>Nacimiento:</strong> {{ usuario.fechaNacimiento }}
+                </p>
+              </div>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Mensaje cuando no hay usuarios -->
+    <ion-card *ngIf="usuarios.length === 0" class="empty-state-card">
+      <ion-card-header>
+        <ion-card-title>Sin usuarios registrados</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="empty-state">
+          <ion-icon name="people-outline"></ion-icon>
+          <p>No hay usuarios registrados en la aplicación.</p>
+          <ion-button size="small" (click)="recargar()" color="primary">
+            <ion-icon name="refresh-outline" slot="start"></ion-icon>
+            Reintentar
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Navegación de retorno -->
+  <div class="back-button-container">
+    <ion-button expand="block" shape="round" color="medium" routerLink="/inicio">
+      <ion-icon name="home-outline" slot="start"></ion-icon>
+      Volver al Inicio
+    </ion-button>
+  </div>
 </ion-content>
